@@ -416,3 +416,18 @@ body {
     opacity: 0.45;
   }
 }
+
+/* Landing Page Ashoka Chakra rotation */
+@keyframes spinChakraAnticlockwise {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+
+  to {
+    transform: translate(-50%, -50%) rotate(-360deg);
+  }
+}
+
+.animate-spin-chakra {
+  animation: spinChakraAnticlockwise 90s linear infinite;
+}

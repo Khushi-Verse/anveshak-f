@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const ChakraBackground = () => {
@@ -6,7 +7,7 @@ export const ChakraBackground = () => {
 
   return (
     <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
-      {/* Saffron Ambient Glow at Top-Left - richer, deeper sovereign shade, visible yet subtle */}
+      {/* Saffron Ambient Glow at Top-Left */}
       <div
         className="absolute -top-20 -left-12 w-[600px] h-[540px] rounded-full blur-[85px] pointer-events-none"
         style={{
@@ -15,7 +16,7 @@ export const ChakraBackground = () => {
         }}
       />
 
-      {/* Emerald Green Ambient Glow at Bottom-Right - richer, deeper sovereign shade, visible yet subtle */}
+      {/* Emerald Green Ambient Glow at Bottom-Right */}
       <div
         className="absolute -bottom-20 -right-12 w-[600px] h-[540px] rounded-full blur-[85px] pointer-events-none"
         style={{
@@ -24,7 +25,7 @@ export const ChakraBackground = () => {
         }}
       />
 
-      {/* Central Radiance to preserve crisp typography legibility without washing out the colors */}
+      {/* Central Radiance */}
       <div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[580px] h-[580px] rounded-full blur-[80px] pointer-events-none"
         style={{
@@ -34,11 +35,11 @@ export const ChakraBackground = () => {
       />
 
       {/* Authentic Geometrical 24-Spoke Ashoka Chakra Rotating Clockwise Continuously */}
-      {/* Sized precisely to fit between header and footer without overflowing */}
       <div
-        className="absolute top-1/2 left-1/2 w-[min(800px,calc(100vh-140px),calc(100vw-48px))] h-[min(800px,calc(100vh-140px),calc(100vw-48px))] opacity-[0.15] pointer-events-none animate-spin-chakra flex items-center justify-center"
-        aria-hidden="true"
-      >
+  className="absolute top-1/2 left-1/2 w-[min(800px,calc(100vh-140px),calc(100vw-48px))] h-[min(800px,calc(100vh-140px),calc(100vw-48px))] opacity-[0.15] pointer-events-none animate-spin-chakra flex items-center justify-center"
+ 
+  aria-hidden="true"
+>
         <svg
           className="w-full h-full text-[#002244]"
           fill="none"
@@ -47,13 +48,25 @@ export const ChakraBackground = () => {
         >
           {/* Outer Concentric Rims */}
           <circle cx="200" cy="200" r="185" strokeWidth="4.5" />
-          <circle cx="200" cy="200" r="172" strokeDasharray="4 6" strokeWidth="1.8" />
+          <circle
+            cx="200"
+            cy="200"
+            r="172"
+            strokeDasharray="4 6"
+            strokeWidth="1.8"
+          />
           <circle cx="200" cy="200" r="158" strokeWidth="1.5" />
 
           {/* Central Hub Rings */}
           <circle cx="200" cy="200" r="42" strokeWidth="4" />
           <circle cx="200" cy="200" r="32" strokeWidth="1.5" />
-          <circle cx="200" cy="200" fill="currentColor" r="16" stroke="none" />
+          <circle
+            cx="200"
+            cy="200"
+            fill="currentColor"
+            r="16"
+            stroke="none"
+          />
 
           {/* 24 Spokes with Precision Geometry & Tip Beads */}
           <g fill="currentColor" stroke="none" transform="translate(200, 200)">
@@ -77,3 +90,5 @@ export const ChakraBackground = () => {
     </div>
   );
 };
+
+
