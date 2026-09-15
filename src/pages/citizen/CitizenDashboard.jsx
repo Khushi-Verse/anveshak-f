@@ -132,15 +132,15 @@ const CitizenDashboard = () => {
           </div>
 
           <div className="space-y-6">
-            <div className="bg-gradient-to-br from-navy to-navy-700 rounded-2xl shadow-md p-6 text-white">
+            <div className="bg-gradient-to-br from-[#FFF1E0] to-[#FFE0B2] rounded-2xl shadow-md p-6 text-orange-950">
               <h3 className="text-lg font-bold mb-2">Quick Actions</h3>
-              <p className="text-navy-100 text-sm mb-6">Need to report an incident? File an e-FIR instantly.</p>
+           <p className="text-orange-900/75 text-sm mb-6">Need to report an incident? File an e-FIR instantly.</p>
               
               <div className="space-y-3">
                 <Link to="/citizen/log-fir" className="w-full flex items-center justify-between bg-white/10 hover:bg-white/20 p-4 rounded-xl transition-colors">
                   <div className="flex items-center gap-3">
                     <PlusCircle size={20} className="text-saffron" />
-                    <span className="font-semibold">Log New FIR</span>
+                  <span className="font-semibold text-orange-950">Log New FIR</span>
                   </div>
                   <ArrowRight size={16} className="text-white/50" />
                 </Link>
@@ -148,9 +148,9 @@ const CitizenDashboard = () => {
                 <Link to="/citizen/view-firs" className="w-full flex items-center justify-between bg-white/10 hover:bg-white/20 p-4 rounded-xl transition-colors">
                   <div className="flex items-center gap-3">
                     <List size={20} className="text-green-400" />
-                    <span className="font-semibold">Track Status</span>
+                   <span className="font-semibold text-orange-950">Track Status</span>
                   </div>
-                  <ArrowRight size={16} className="text-white/50" />
+                 <ArrowRight size={16} className="text-orange-900/50" />
                 </Link>
               </div>
             </div>

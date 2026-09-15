@@ -796,7 +796,7 @@ const [voiceImgIdx, setVoiceImgIdx] = useState(0);
 </section>
 
       {/* ═══════════ CRIME HOTSPOT MAP ═══════════ */}
-      <section ref={mapReveal.ref} className="py-16 lg:py-20 bg-[#FFF4E6]" id="crime-map">
+      <section ref={mapReveal.ref} className="py-16 lg:py-20 bg-[#EAF7EF]" id="crime-map">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className={`text-center mb-12 ${mapReveal.visible ? 'fade-in-up' : 'opacity-0'}`}>
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-alert/5 border border-alert/10 text-xs font-semibold text-alert mb-4">
