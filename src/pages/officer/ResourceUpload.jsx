@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import Breadcrumb from '../../components/layout/Breadcrumb';
-import { FileText, BarChart, Shield, UploadCloud, Lock, CheckCircle2 } from 'lucide-react';
+import { FileText, BarChart, Shield, UploadCloud, Lock, CheckCircle2, Download } from 'lucide-react';
 import { formatDate } from '../../utils/helpers';
+import HashVerificationModal from '../../components/shared/HashVerificationModal';
+import SigVerificationModal from '../../components/shared/SigVerificationModal';
 
 export default function ResourceUpload() {
   const { t } = useLanguage();
@@ -11,6 +13,8 @@ export default function ResourceUpload() {
   const [selectedCase, setSelectedCase] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState(null);
+  const [verifyingEvidence, setVerifyingEvidence] = useState(null);
+  const [verifyingSigEvidence, setVerifyingSigEvidence] = useState(null);
   const fileInputRef = useRef(null);
   const [currentFiles, setCurrentFiles] = useState([]);
 
@@ -24,9 +28,10 @@ export default function ResourceUpload() {
         });
         if (res.ok) {
           const data = await res.json();
-          setCases(data.cases || data);
-          if ((data.cases || data).length > 0) {
-            setSelectedCase((data.cases || data)[0].caseId || (data.cases || data)[0]._id);
+          const casesArray = Array.isArray(data.cases) ? data.cases : Array.isArray(data) ? data : [];
+          setCases(casesArray);
+          if (casesArray.length > 0) {
+            setSelectedCase(casesArray[0].caseId || casesArray[0]._id);
           }
         }
       } catch (err) {
@@ -47,13 +52,16 @@ export default function ResourceUpload() {
         });
         if (res.ok) {
           const data = await res.json();
-          if (data.evidence) {
-             setCurrentFiles(data.evidence.map(e => ({
-                id: e._id || e.evidenceId,
+          const caseEv = data.case?.evidence || data.evidence;
+          if (caseEv) {
+             setCurrentFiles(caseEv.map(e => ({
+                id: e.evidenceId || e._id,
+                evidenceId: e.evidenceId || e._id,
                 name: e.fileName || 'Document',
                 size: 'Encrypted',
                 date: e.createdAt,
                 type: 'Documents',
+                fileHash: e.fileHash,
                 verificationStatus: e.verificationStatus
              })));
           } else {
@@ -108,19 +116,22 @@ export default function ResourceUpload() {
         const caseRes = await fetch(`${API_URL}/case/${selectedCase}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        if (caseRes.ok) {
-          const caseData = await caseRes.json();
-          if (caseData.evidence) {
-             setCurrentFiles(caseData.evidence.map(ev => ({
-                id: ev._id || ev.evidenceId,
-                name: ev.fileName || 'Document',
-                size: 'Encrypted',
-                date: ev.createdAt,
-                type: 'Documents',
-                verificationStatus: ev.verificationStatus
-             })));
+          if (caseRes.ok) {
+            const caseData = await caseRes.json();
+            const caseEv = caseData.case?.evidence || caseData.evidence;
+            if (caseEv) {
+               setCurrentFiles(caseEv.map(ev => ({
+                  id: ev.evidenceId || ev._id,
+                  evidenceId: ev.evidenceId || ev._id,
+                  name: ev.fileName || 'Document',
+                  size: 'Encrypted',
+                  date: ev.createdAt,
+                  type: 'Documents',
+                  fileHash: ev.fileHash,
+                  verificationStatus: ev.verificationStatus
+               })));
+            }
           }
-        }
       } else {
         const data = await res.json();
         setUploadMessage({ type: 'error', text: data.message || 'Upload failed' });
@@ -228,10 +239,21 @@ export default function ResourceUpload() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1 text-xs font-medium text-forest bg-forest/10 px-2 py-1 rounded">
-                  <Lock className="w-3 h-3" /> Encrypted
-                </span>
-                <CheckCircle2 className="w-5 h-5 text-forest" />
+                <button 
+                  onClick={() => setVerifyingEvidence(file)}
+                  className="px-3 py-1.5 bg-violet-100 text-violet-700 hover:bg-violet-200 rounded transition-colors text-xs font-semibold whitespace-nowrap"
+                >
+                  Verify Hash
+                </button>
+                <button 
+                  onClick={() => setVerifyingSigEvidence(file)}
+                  className="px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded transition-colors text-xs font-semibold whitespace-nowrap"
+                >
+                  Verify Sig
+                </button>
+                <button className="p-1.5 text-slate-400 hover:text-navy hover:bg-gray-100 rounded transition-colors" title="Download">
+                  <Download className="w-4 h-4" />
+                </button>
               </div>
             </div>
           ))}
@@ -240,6 +262,20 @@ export default function ResourceUpload() {
           )}
         </div>
       </div>
+
+      <HashVerificationModal 
+        isOpen={!!verifyingEvidence} 
+        onClose={() => setVerifyingEvidence(null)} 
+        evidence={verifyingEvidence}
+        caseId={selectedCase}
+      />
+      
+      <SigVerificationModal 
+        isOpen={!!verifyingSigEvidence} 
+        onClose={() => setVerifyingSigEvidence(null)} 
+        evidence={verifyingSigEvidence}
+        caseId={selectedCase}
+      />
     </div>
   );
 }

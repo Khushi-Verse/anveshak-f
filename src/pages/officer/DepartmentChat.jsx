@@ -24,7 +24,7 @@ export default function DepartmentChat() {
         });
         if (res.ok) {
           const data = await res.json();
-          const cases = data.cases || data;
+          const cases = Array.isArray(data.cases) ? data.cases : Array.isArray(data) ? data : [];
           const channels = cases.map(c => ({
             id: c.caseId || c._id,
             name: c.title || c.firId?.incidentDescription?.substring(0, 30) + '...',

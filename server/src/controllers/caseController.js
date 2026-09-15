@@ -14,6 +14,8 @@ const {
 
 const { analyzeFIR } = require("../services/aiService");
 
+const { createNotification } = require("./notificationController");
+
 const {
   findBestOfficer,
   normalizeJurisdiction,
@@ -123,6 +125,26 @@ const createCaseFromFIR = async (req, res) => {
         verificationStatus: "VERIFIED",
       });
 
+      // NOTIFICATION TO CITIZEN
+      try {
+        await createNotification({
+          userId: fir.createdBy,
+          caseId: newCase.caseId,
+          type: "CASE_ASSIGNED",
+          message: `Your case ${newCase.caseId} has been created and assigned to an officer.`,
+        });
+      } catch(e) {}
+
+      // NOTIFICATION TO OFFICER
+      try {
+        await createNotification({
+          userId: officer._id,
+          caseId: newCase.caseId,
+          type: "CASE_ASSIGNED",
+          message: `You have been assigned a new case: ${newCase.caseId}.`,
+        });
+      } catch(e) {}
+
       console.log(
         `Case ${newCase.caseId} automatically assigned to ${officer.name}`
       );
@@ -130,6 +152,16 @@ const createCaseFromFIR = async (req, res) => {
       console.log(
         `No available officer found for jurisdiction: ${jurisdiction}`
       );
+
+      // NOTIFICATION TO CITIZEN
+      try {
+        await createNotification({
+          userId: fir.createdBy,
+          caseId: newCase.caseId,
+          type: "CASE_CREATED",
+          message: `Your case ${newCase.caseId} has been successfully created and is pending assignment.`,
+        });
+      } catch(e) {}
     }
 
     return res.status(201).json({
@@ -192,6 +224,18 @@ const updateStatus = async (req, res) => {
       status,
       userId
     );
+
+    // NOTIFICATION TO CITIZEN
+    try {
+      if (updatedCase && updatedCase.citizenId) {
+        await createNotification({
+          userId: updatedCase.citizenId,
+          caseId: updatedCase.caseId,
+          type: "STATUS_CHANGED",
+          message: `The status of your case ${updatedCase.caseId} has been updated to ${status}.`,
+        });
+      }
+    } catch(e) {}
 
     return res.status(200).json({
       message: "Case status updated successfully",

@@ -87,10 +87,15 @@ const SignatureVerification = ({
 
   const completeVerification = (usedMethod) => {
     const timestamp = new Date().toISOString();
+    let signatureImage = null;
+    if (usedMethod === 'canvas' && canvasRef.current) {
+      signatureImage = canvasRef.current.toDataURL("image/png");
+    }
     const data = {
       method: usedMethod,
       officerName,
-      timestamp
+      timestamp,
+      signatureImage
     };
     setIsAuthenticating(false);
     setVerificationSuccess(true);

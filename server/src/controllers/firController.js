@@ -1,5 +1,5 @@
 const FIR = require("../models/FIR");
-
+const { createNotification } = require("./notificationController");
 
 // ===============================
 // CREATE FIR
@@ -51,6 +51,15 @@ const createFIR = async (req, res) => {
       category,
       createdBy: req.user.userId,
     });
+
+    try {
+      await createNotification({
+        userId: req.user.userId,
+        caseId: fir.firNumber, // placeholder for UI
+        type: "FIR_SUBMITTED",
+        message: `Your FIR ${fir.firNumber} has been submitted successfully and is pending review.`,
+      });
+    } catch (e) {}
 
     res.status(201).json({
       message: "FIR created successfully",

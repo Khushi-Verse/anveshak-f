@@ -5,6 +5,8 @@ import { mockOfficerCases, mockAuditLog } from '../../data/mockData';
 import CaseTimeline from '../../components/shared/CaseTimeline';
 import FormalCaseChat from '../../components/shared/FormalCaseChat';
 import SignatureVerification from '../../components/shared/SignatureVerification';
+import HashVerificationModal from '../../components/shared/HashVerificationModal';
+import SigVerificationModal from '../../components/shared/SigVerificationModal';
 import { 
   ArrowLeft, Download, Shield, Clock, MapPin, Users, 
   FileText, Upload, AlertTriangle, CheckCircle, Link as LinkIcon, 
@@ -23,6 +25,8 @@ export default function CaseDetail() {
   const { user } = useAuth();
   const [showUploadEvidence, setShowUploadEvidence] = useState(false);
   const [signatureVerified, setSignatureVerified] = useState(false);
+  const [verifyingEvidence, setVerifyingEvidence] = useState(null);
+  const [verifyingSigEvidence, setVerifyingSigEvidence] = useState(null);
   const [evidenceFile, setEvidenceFile] = useState(null);
 
   const [showEditTimeline, setShowEditTimeline] = useState(false);
@@ -102,8 +106,13 @@ export default function CaseDetail() {
             description: c.firId?.incidentDescription || 'No description',
             aiAnalysis: c.aiAnalysis || null,
             evidence: (c.evidence || []).map(e => ({
-                id: e._id || e.evidenceId,
+                id: e.evidenceId || e._id,
+                evidenceId: e.evidenceId || e._id,
                 filename: e.fileName || e.filename || 'Document',
+                fileHash: e.fileHash || 'N/A',
+                verificationStatus: e.verificationStatus || 'PENDING',
+                blockchainStatus: e.blockchainStatus || 'PENDING',
+                blockchainTxHash: e.blockchainTxHash || null,
                 type: 'Evidence',
                 uploadedBy: e.uploadedBy ? (e.uploadedBy.name || e.uploadedBy) : 'System',
                 date: new Date(e.createdAt || Date.now()).toLocaleDateString()
@@ -484,25 +493,58 @@ export default function CaseDetail() {
                   <thead className="text-xs text-slate-500 uppercase bg-slate-50/50 border-b border-slate-200">
                     <tr>
                       <th className="px-4 py-3 font-medium">Filename</th>
+                      <th className="px-4 py-3 font-medium">File Hash (SHA-256)</th>
                       <th className="px-4 py-3 font-medium">Type</th>
-                      <th className="px-4 py-3 font-medium">Uploaded By</th>
-                      <th className="px-4 py-3 font-medium">Date</th>
+                      <th className="px-4 py-3 font-medium">Status</th>
+                      <th className="px-4 py-3 font-medium">Blockchain</th>
                       <th className="px-4 py-3 font-medium text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {evidenceList.map((item) => (
+                    {caseData.evidence?.map((item) => (
                       <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
                         <td className="px-4 py-3 font-medium text-slate-800 flex items-center">
                           <FileText className="w-4 h-4 mr-2 text-violet-500" />
                           {item.filename}
                         </td>
+                        <td className="px-4 py-3">
+                          <span className="font-mono text-xs text-slate-500 truncate block max-w-[120px]" title={item.fileHash}>{item.fileHash || 'N/A'}</span>
+                        </td>
                         <td className="px-4 py-3 text-slate-600">
                           <span className="px-2 py-1 bg-slate-100 rounded text-xs">{item.type}</span>
                         </td>
-                        <td className="px-4 py-3 text-slate-600">{item.uploadedBy}</td>
-                        <td className="px-4 py-3 text-slate-600">{item.date}</td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            item.verificationStatus === 'VERIFIED' ? 'bg-emerald-100 text-emerald-700' :
+                            item.verificationStatus === 'TAMPERED' ? 'bg-red-100 text-red-700' :
+                            'bg-amber-100 text-amber-700'
+                          }`}>
+                            {item.verificationStatus || 'PENDING'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-xs font-mono">
+                          {item.blockchainTxHash ? (
+                            <a href={`https://sepolia.etherscan.io/tx/${item.blockchainTxHash}`} target="_blank" rel="noopener noreferrer" className="text-violet-600 hover:underline flex items-center">
+                              <LinkIcon className="w-3 h-3 mr-1" />
+                              {item.blockchainTxHash.substring(0, 8)}...
+                            </a>
+                          ) : (
+                            <span className="text-slate-400">Not Anchored</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right flex justify-end items-center space-x-2">
+                          <button 
+                            onClick={() => setVerifyingEvidence(item)}
+                            className="px-2 py-1 bg-violet-100 text-violet-700 hover:bg-violet-200 rounded transition-colors text-xs font-semibold whitespace-nowrap"
+                          >
+                            Verify Hash
+                          </button>
+                          <button 
+                            onClick={() => setVerifyingSigEvidence(item)}
+                            className="px-2 py-1 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded transition-colors text-xs font-semibold whitespace-nowrap"
+                          >
+                            Verify Sig
+                          </button>
                           <button className="p-1.5 text-violet-600 hover:bg-violet-100 rounded transition-colors" title="Download">
                             <Download className="w-4 h-4" />
                           </button>
@@ -511,7 +553,7 @@ export default function CaseDetail() {
                     ))}
                   </tbody>
                 </table>
-                {evidenceList.length === 0 && (
+                {(!caseData.evidence || caseData.evidence.length === 0) && (
                   <p className="text-center text-slate-500 py-6">No evidence attached yet.</p>
                 )}
               </div>
@@ -757,6 +799,20 @@ export default function CaseDetail() {
           </div>
         </div>
       )}
+
+      <HashVerificationModal 
+        isOpen={!!verifyingEvidence} 
+        onClose={() => setVerifyingEvidence(null)} 
+        evidence={verifyingEvidence}
+        caseId={caseData?.caseId || caseData?.id}
+      />
+      
+      <SigVerificationModal 
+        isOpen={!!verifyingSigEvidence} 
+        onClose={() => setVerifyingSigEvidence(null)} 
+        evidence={verifyingSigEvidence}
+        caseId={caseData?.caseId || caseData?.id}
+      />
     </div>
   );
 }

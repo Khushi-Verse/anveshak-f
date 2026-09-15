@@ -41,11 +41,11 @@ export default function AuditLog() {
     fetchAllLogs();
   }, []);
 
-  const uniqueUsers = [...new Set(logs.map(l => l.by?.name || l.by))].filter(Boolean);
+  const uniqueUsers = [...new Set(logs.map(l => l.user))].filter(Boolean);
   const uniqueActions = [...new Set(logs.map(l => l.action))].filter(Boolean);
 
   const filteredLogs = logs.filter(l => {
-    const userMatch = !filterUser || (l.by?.name || l.by) === filterUser;
+    const userMatch = !filterUser || l.user === filterUser;
     const actionMatch = !filterAction || l.action === filterAction;
     return userMatch && actionMatch;
   });

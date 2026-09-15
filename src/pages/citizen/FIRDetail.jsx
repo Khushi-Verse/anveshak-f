@@ -75,7 +75,7 @@ export default function FIRDetail() {
                  const tData = await timelineRes.json();
                  if (tData.timeline && tData.timeline.length > 0) {
                    stages = tData.timeline.map(t => ({
-                     date: formatDate(t.timestamp),
+                     date: formatDate(t.timestamp || t.createdAt),
                      event: t.action.replace(/_/g, ' '),
                      description: t.description || 'System Update'
                    }));
