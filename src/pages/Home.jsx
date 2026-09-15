@@ -703,7 +703,7 @@ const [voiceImgIdx, setVoiceImgIdx] = useState(0);
       </section>
 
       {/* ═══════════ HOW IT WORKS ═══════════ */}
-      <section ref={howReveal.ref} className="py-16 lg:py-20 bg-white" id="how-it-works">
+      <section ref={howReveal.ref} className="py-16 lg:py-20 bg-[#FFF4E6]" id="how-it-works">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className={`text-center mb-12 ${howReveal.visible ? 'fade-in-up' : 'opacity-0'}`}>
             <h2 className="text-3xl sm:text-4xl font-bold text-charcoal mb-3">{t('howItWorks.title')}</h2>
@@ -796,7 +796,7 @@ const [voiceImgIdx, setVoiceImgIdx] = useState(0);
 </section>
 
       {/* ═══════════ CRIME HOTSPOT MAP ═══════════ */}
-      <section ref={mapReveal.ref} className="py-16 lg:py-20 bg-white" id="crime-map">
+      <section ref={mapReveal.ref} className="py-16 lg:py-20 bg-[#FFF4E6]" id="crime-map">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className={`text-center mb-12 ${mapReveal.visible ? 'fade-in-up' : 'opacity-0'}`}>
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-alert/5 border border-alert/10 text-xs font-semibold text-alert mb-4">
