@@ -211,8 +211,8 @@ const [voiceImgIdx, setVoiceImgIdx] = useState(0);
     { icon: ClipboardList, titleKey: 'feature.tracking', descKey: 'feature.trackingDesc', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', img: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=500&fit=crop' },
     { icon: Share2, titleKey: 'feature.sharing', descKey: 'feature.sharingDesc', color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-200', img: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=500&fit=crop' },
     { icon: Bell, titleKey: 'feature.alerts', descKey: 'feature.alertsDesc', color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200', img: 'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?w=800&h=500&fit=crop' },
-    { icon: Mic, titleKey: 'feature.voice', descKey: 'feature.voiceDesc', color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200', img: 'https://images.unsplash.com/photo-1528312635001-4be7c11cda6d?w=800&h=500&fit=crop' },
-    { icon: Lock, titleKey: 'feature.vault', descKey: 'feature.vaultDesc', color: 'text-rose-500', bg: 'bg-rose-50', border: 'border-rose-200', img: 'https://images.unsplash.com/photo-1563986768494-4dee2763ff0f?w=800&h=500&fit=crop' },
+    { icon: Mic, titleKey: 'feature.voice', descKey: 'feature.voiceDesc', color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200',  img: '/src/assets/voice-image.jpg' },
+    { icon: Lock, titleKey: 'feature.vault', descKey: 'feature.vaultDesc', color: 'text-rose-500', bg: 'bg-rose-50', border: 'border-rose-200', img: '/src/assets/encrypted-image.jpg' },
     { icon: Eye, titleKey: 'feature.audit', descKey: 'feature.auditDesc', color: 'text-emerald-800', bg: 'bg-emerald-100', border: 'border-emerald-300', img: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=500&fit=crop' },
   ];
 
@@ -224,10 +224,10 @@ const [voiceImgIdx, setVoiceImgIdx] = useState(0);
   ];
 
   const citizenServices = [
-    { title: 'File FIR Online', desc: 'Register complaints from anywhere', icon: ClipboardList, img: 'https://images.unsplash.com/photo-1589578527966-fdac0f44566c?w=300&h=200&fit=crop', link: '/citizen/log-fir' },
+    { title: 'File FIR Online', desc: 'Register complaints from anywhere', icon: ClipboardList, img: '/src/assets/fir-image.jpg', link: '/citizen/log-fir' },
     { title: 'Track Case Status', desc: 'Real-time updates on your case', icon: Search, img: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=300&h=200&fit=crop', link: '/citizen/view-firs' },
     { title: 'Court Hearings', desc: 'Check hearing dates & orders', icon: Scale, img: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=300&h=200&fit=crop', link: '/court/proceedings' },
-    { title: 'Evidence Upload', desc: 'Secure encrypted evidence vault', icon: Lock, img: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=300&h=200&fit=crop', link: '/citizen/log-fir' },
+    { title: 'Evidence Upload', desc: 'Secure encrypted evidence vault', icon: Lock, img: 'src/assets/evidence-image.jpg', link: '/citizen/log-fir'  },
     { title: 'Legal Aid', desc: 'Find free legal assistance near you', icon: Users, img: 'https://images.unsplash.com/photo-1521791055366-0d553872125f?w=300&h=200&fit=crop', link: '#' },
   ];
 
@@ -573,7 +573,7 @@ const [voiceImgIdx, setVoiceImgIdx] = useState(0);
                 onClick={() => setActiveTab('citizens')}
                 className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                   activeTab === 'citizens'
-                    ? 'bg-navy text-white shadow-md shadow-navy/20'
+                    ? 'bg-[#FFB76B] text-[#5C3A21] shadow-md shadow-[#FFB76B]/20'
                     : 'text-charcoal-muted hover:text-charcoal'
                 }`}
               >
@@ -584,7 +584,7 @@ const [voiceImgIdx, setVoiceImgIdx] = useState(0);
                 onClick={() => setActiveTab('officers')}
                 className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                   activeTab === 'officers'
-                    ? 'bg-navy text-white shadow-md shadow-navy/20'
+                    ? 'bg-[#FFB76B] text-[#5C3A21] shadow-md shadow-[#FFB76B]/20'
                     : 'text-charcoal-muted hover:text-charcoal'
                 }`}
               >
@@ -656,10 +656,7 @@ const [voiceImgIdx, setVoiceImgIdx] = useState(0);
                   <div className="relative z-10 flex-1 min-w-0">
                     <p className={`text-[15px] font-bold ${activeFeature === i ? 'text-charcoal' : 'text-charcoal-muted'} transition-colors inline-block relative`}>
                       {t(titleKey)}
-                      {/* Progress indicator - ONLY under text */}
-                      {activeFeature === i && (
-                        <span className={`absolute -bottom-1 left-0 h-[3px] rounded-full bg-gradient-to-r ${color.replace('text-', 'from-')} to-amber-500`} style={{ width: '100%', animation: 'shimmer 4s linear infinite' }} />
-                      )}
+                      
                     </p>
                   </div>
                   {activeFeature === i && (
@@ -684,11 +681,7 @@ const [voiceImgIdx, setVoiceImgIdx] = useState(0);
                       loading="lazy"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                    {/* Floating status tag */}
-                    <div className="absolute bottom-4 left-4 backdrop-blur-md bg-white/10 border border-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-2 shadow-lg">
-                      <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      Live Preview
-                    </div>
+                    
                   </div>
                 </div>
                 
@@ -929,8 +922,8 @@ const [voiceImgIdx, setVoiceImgIdx] = useState(0);
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className={`relative overflow-hidden rounded-3xl p-1 ${ctaReveal.visible ? 'fade-in-up' : 'opacity-0'}`}>
             {/* Gradient border */}
-            <div className="absolute inset-0 bg-gradient-to-r from-saffron via-navy to-forest rounded-3xl" />
-            <div className="relative rounded-[1.35rem] bg-gradient-to-br from-navy-950 via-navy to-navy-800 text-white p-8 sm:p-14 text-center overflow-hidden">
+    
+            <div className="relative rounded-[1.35rem] bg-purple-300/45 backdrop-blur-xl border border-white/40 text-slate-800 p-8 sm:p-14 text-center overflow-hidden shadow-xl">
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-0 right-0 w-72 h-72 bg-saffron/10 rounded-full blur-3xl" />
                 <div className="absolute bottom-0 left-0 w-56 h-56 bg-forest/10 rounded-full blur-3xl" />
@@ -946,17 +939,13 @@ const [voiceImgIdx, setVoiceImgIdx] = useState(0);
                   <div className="flex-1 bg-forest" />
                 </div>
                 <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-                  Ready to Access <span className="font-serif italic text-saffron-300">Digital Justice</span>?
+                  Ready to Access <span className="font-serif italic text-purple-600">Digital Justice</span>?
                 </h2>
-                <p className="text-white/60 mb-8 max-w-xl mx-auto">
+                <p className="text-slate-700 mb-8 max-w-xl mx-auto">
                   Join millions of citizens, officers, and courts on India's unified justice delivery platform.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <Link to="/register/citizen" className="pill-btn bg-white text-navy hover:bg-cream font-semibold shadow-lg px-8 py-3.5 group">
-                    <UserPlus className="w-5 h-5" />
-                    Register as Citizen
-                    <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                  </Link>
+                
                   <Link to="/login" className="pill-btn border-2 border-white/20 text-white hover:bg-white/10 font-semibold px-8 py-3.5">
                     Login to Dashboard
                   </Link>
