@@ -14,55 +14,78 @@ export default function HeroCarousel() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrent((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+      setCurrent((prev) =>
+        prev === slides.length - 1 ? 0 : prev + 1
+      );
     }, 5000);
+
     return () => clearInterval(timer);
   }, []);
 
-  const nextSlide = () => setCurrent(current === slides.length - 1 ? 0 : current + 1);
-  const prevSlide = () => setCurrent(current === 0 ? slides.length - 1 : current - 1);
+  const nextSlide = () => {
+    setCurrent((prev) =>
+      prev === slides.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  const prevSlide = () => {
+    setCurrent((prev) =>
+      prev === 0 ? slides.length - 1 : prev - 1
+    );
+  };
 
   return (
-    <div className="relative w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] xl:h-[600px] overflow-hidden bg-gray-100 group shadow-lg z-10">
+    <div className="relative w-[90%] max-w-6xl h-[220px] sm:h-[300px] md:h-[360px] mx-auto my-8 overflow-hidden rounded-2xl bg-gray-100 group shadow-lg">
       {/* Slides */}
-      <div 
-        className="flex transition-transform duration-700 ease-in-out h-full"
-        style={{ transform: `translateX(-${current * 100}%)` }}
+      <div
+        className="flex h-full transition-transform duration-700 ease-in-out"
+        style={{
+          transform: `translateX(-${current * 100}%)`,
+        }}
       >
         {slides.map((slide) => (
-          <div key={slide.id} className="min-w-full h-full flex-shrink-0">
-            <img 
-              src={slide.image} 
-              alt={`Slide ${slide.id}`} 
-              className="w-full h-full object-cover"
+          <div
+            key={slide.id}
+            className="min-w-full h-full flex-shrink-0 flex items-center justify-center"
+          >
+            <img
+              src={slide.image}
+              alt={`Slide ${slide.id}`}
+              className="w-full h-full object-contain"
             />
           </div>
         ))}
       </div>
 
-      {/* Controls */}
-      <button 
+      {/* Previous button */}
+      <button
         onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/70 backdrop-blur-md flex items-center justify-center text-navy hover:bg-white transition-all opacity-0 group-hover:opacity-100 shadow-md z-10"
+        aria-label="Previous slide"
+        className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-navy hover:bg-white transition-all opacity-0 group-hover:opacity-100 shadow-md"
       >
-        <ChevronLeft className="w-6 h-6" />
+        <ChevronLeft className="w-5 h-5" />
       </button>
-      
-      <button 
+
+      {/* Next button */}
+      <button
         onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/70 backdrop-blur-md flex items-center justify-center text-navy hover:bg-white transition-all opacity-0 group-hover:opacity-100 shadow-md z-10"
+        aria-label="Next slide"
+        className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-navy hover:bg-white transition-all opacity-0 group-hover:opacity-100 shadow-md"
       >
-        <ChevronRight className="w-6 h-6" />
+        <ChevronRight className="w-5 h-5" />
       </button>
 
       {/* Indicators */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full z-10">
-        {slides.map((_, i) => (
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/40 backdrop-blur-md px-3 py-2 rounded-full">
+        {slides.map((slide, index) => (
           <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            className={`w-2.5 h-2.5 rounded-full transition-all ${
-              i === current ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80'
+            key={slide.id}
+            onClick={() => setCurrent(index)}
+            aria-label={`Go to slide ${index + 1}`}
+            className={`h-2.5 rounded-full transition-all ${
+              index === current
+                ? 'bg-white w-7'
+                : 'bg-white/50 w-2.5 hover:bg-white/80'
             }`}
           />
         ))}
