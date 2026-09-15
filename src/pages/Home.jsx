@@ -284,7 +284,7 @@ export default function Landing() {
           <div className="absolute top-[60%] right-[10%] w-2.5 h-2.5 rounded-full bg-teal-400 shadow-[0_0_15px_rgba(45,212,191,0.8)] float-slow" style={{ animationDelay: '2s' }} />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full transform scale-100 sm:scale-110 lg:scale-125 xl:scale-150 origin-top xl:origin-center mt-10 xl:mt-0 transition-transform duration-500">
+       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-10 xl:mt-0">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center mb-6 lg:mb-8">
             {/* Left content */}
             <div className={`${heroReveal.visible ? 'fade-in-up' : 'opacity-0'}`}>
