@@ -15,6 +15,7 @@ const {
   getSingleCase,
   getAssignedCases,
   getCaseAuditLogs,
+  getSystemAuditLogs,
   getCaseStats,
   getTimeline,
   addTimelineEvent,
@@ -54,6 +55,8 @@ router.post(
 );
 
 // ======================================================
+router.get('/audit/all', protect, allowRoles('POLICE', 'ADMIN'), getSystemAuditLogs);
+
 // GET ALL CASES
 // ======================================================
 
@@ -184,3 +187,4 @@ router.post(
 );
 
 module.exports = router;
+

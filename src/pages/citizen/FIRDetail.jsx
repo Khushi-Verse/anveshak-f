@@ -1,31 +1,39 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import CaseTimeline from '../../components/shared/CaseTimeline';
 import { formatDate } from '../../utils/helpers';
 import { 
   ArrowLeft, Download, MapPin, Calendar, User, 
-  File, Phone, Mail, FileText, AlertCircle, 
-  ShieldCheck, ArrowRight, HelpCircle, Loader2
+  FileText, ShieldCheck, AlertCircle, Loader2, CheckCircle2
 } from 'lucide-react';
 
 export default function FIRDetail() {
   const { id } = useParams();
-  
   const [fir, setFir] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [timelineStages, setTimelineStages] = useState([]);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   useEffect(() => {
-    const fetchFir = async () => {
+    const fetchFirAndCase = async () => {
       try {
         const token = localStorage.getItem('anveshak_token');
         const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+        
+        // 1. Fetch FIR details
         const res = await fetch(`${API_URL}/fir/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
         if(res.ok) {
           const f = data.fir;
+          const statusMap = {
+            'FILED': { step: 1 },
+            'UNDER_INVESTIGATION': { step: 2 },
+            'RESOLVED': { step: 5 },
+          };
+          const statusStep = (statusMap[f.status] || statusMap['FILED']).step;
           setFir({
             id: f._id,
             firId: f.firNumber,
@@ -39,6 +47,47 @@ export default function FIRDetail() {
             description: f.incidentDescription || 'No description',
             complainant: f.complainant || 'Citizen'
           });
+
+          // Default fallback timeline if no case exists yet
+          let stages = [
+            { date: formatDate(f.incidentDate || f.createdAt), event: 'FIR Registered', description: 'Your FIR has been successfully registered.' },
+            { date: statusStep > 1 ? 'Updated' : 'Pending', event: 'Under Investigation', description: 'Investigating Officer collects evidence and statements.' },
+            { date: statusStep > 3 ? 'Updated' : 'Pending', event: 'Chargesheet Filed', description: 'Formal charges filed in court.' },
+            { date: statusStep > 4 ? 'Updated' : 'Pending', event: 'Disposed', description: 'Case resolved.' }
+          ];
+          let stepIdx = statusStep - 1;
+
+          // 2. Fetch all cases for citizen to find the one linked to this FIR
+          const caseListRes = await fetch(`${API_URL}/case`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (caseListRes.ok) {
+            const caseList = await caseListRes.json();
+            const cases = caseList.cases || caseList;
+            const matchedCase = cases.find(c => c.firId && (c.firId._id === id || c.firId === id));
+            
+            if (matchedCase) {
+               // 3. Fetch exact timeline for matched case
+               const timelineRes = await fetch(`${API_URL}/case/${matchedCase.caseId}/timeline`, {
+                 headers: { Authorization: `Bearer ${token}` }
+               });
+               if (timelineRes.ok) {
+                 const tData = await timelineRes.json();
+                 if (tData.timeline && tData.timeline.length > 0) {
+                   stages = tData.timeline.map(t => ({
+                     date: formatDate(t.timestamp),
+                     event: t.action.replace(/_/g, ' '),
+                     description: t.description || 'System Update'
+                   }));
+                   stepIdx = stages.length - 1;
+                 }
+               }
+            }
+          }
+          
+          setTimelineStages(stages);
+          setCurrentStepIndex(stepIdx);
+          
         } else {
           setError(data.message || 'Error fetching FIR');
         }
@@ -49,7 +98,7 @@ export default function FIRDetail() {
         setLoading(false);
       }
     };
-    fetchFir();
+    fetchFirAndCase();
   }, [id]);
 
   const statusMap = {
@@ -60,109 +109,132 @@ export default function FIRDetail() {
 
   if(loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-navy" /></div>;
   if(error) return <div className="p-8 text-red-600 font-bold">{error}</div>;
-  if(!fir) return null;
+  if(!fir) return <div className="p-8">Not found</div>;
 
   const currentStatus = statusMap[fir.status] || statusMap['FILED'];
-  const statusStep = currentStatus.step;
-
-  const defaultCitizenTimeline = [
-    { date: formatDate(fir.date), event: 'FIR Registered', description: 'Your FIR has been successfully registered in the system.' },
-    { date: statusStep > 1 ? 'Updated' : 'Pending', event: 'Under Investigation', description: 'Investigating Officer collects evidence and statements.' },
-    { date: statusStep > 3 ? 'Updated' : 'Pending', event: 'Chargesheet Filed', description: 'Formal charges filed in court.' },
-    { date: statusStep === 5 ? 'Updated' : 'Pending', event: 'Disposed', description: 'Final court verdict delivered or case closed.' }
-  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4 md:p-8 font-sans">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6 animate-fade-in pb-10">
+      
+      {/* Header Actions */}
+      <div className="flex items-center justify-between">
+        <Link to="/citizen/firs" className="inline-flex items-center text-sm font-bold text-navy hover:text-navy/80 transition-colors">
+          <ArrowLeft size={16} className="mr-2" />
+          Back to List
+        </Link>
+        <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-charcoal rounded-xl text-sm font-bold shadow-sm hover:bg-gray-50 transition-all">
+          <Download size={16} />
+          Download PDF
+        </button>
+      </div>
+
+      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         
-        {/* Header Actions */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <Link to="/citizen/view-firs" className="flex items-center gap-2 text-indigo-700 hover:text-indigo-900 font-semibold bg-white/60 px-4 py-2 rounded-xl backdrop-blur-md shadow-sm transition-all hover:bg-white">
-            <ArrowLeft size={18} /> Back to My FIRs
-          </Link>
-          <button className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md transition-all hover:shadow-lg">
-            <Download size={18} /> Download Copy
-          </button>
+        {/* Top Banner */}
+        <div className="bg-navy p-6 md:p-10 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-8 opacity-10">
+            <ShieldCheck size={120} />
+          </div>
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-bold tracking-widest uppercase backdrop-blur-sm">
+                {fir.type}
+              </span>
+              <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase flex items-center gap-1.5 bg-white text-navy shadow-sm`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${currentStatus.color}`}></div>
+                {currentStatus.label}
+              </span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold font-serif mb-2">{fir.firId}</h1>
+            <p className="text-navy-100 flex items-center gap-2">
+              <Calendar size={16} /> Registered on {formatDate(fir.date)}
+            </p>
+          </div>
         </div>
 
-        {/* Main Case Card */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/60 overflow-hidden">
-          {/* Status Header */}
-          <div className={`${currentStatus.bg} px-6 md:px-10 py-6 border-b ${currentStatus.border} flex flex-col md:flex-row md:items-center justify-between gap-4`}>
-            <div>
-              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-black tracking-wider uppercase mb-3 ${currentStatus.color} text-white shadow-sm`}>
-                Status: {currentStatus.label}
-              </span>
-              <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">{fir.title}</h1>
-              <div className="flex items-center gap-4 mt-2">
-                <span className="font-mono text-gray-600 font-medium">ID: {fir.firId}</span>
-              </div>
-            </div>
+        {/* Content Layout */}
+        <div className="flex flex-col lg:flex-row">
+          
+          {/* Left Column: Details */}
+          <div className="flex-1 p-6 md:p-10 border-r border-gray-100">
             
-            <div className="bg-white/60 rounded-2xl p-4 border border-white shadow-inner flex flex-col gap-1 min-w-[200px]">
-              <div className="flex items-center gap-2 text-gray-600 text-sm font-medium">
-                <Calendar size={16} className="text-indigo-500" /> Filed: {formatDate(fir.date)}
-              </div>
-              <div className="flex items-center gap-2 text-gray-600 text-sm font-medium">
-                <MapPin size={16} className="text-indigo-500" /> {fir.location}
-              </div>
-            </div>
-          </div>
-
-          {/* Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-gray-100">
-            
-            {/* Left Column: Details */}
-            <div className="lg:col-span-2 p-6 md:p-10 space-y-10">
+            <div className="space-y-10">
               
               <section>
                 <h3 className="text-sm font-bold text-gray-400 tracking-widest uppercase mb-4 flex items-center gap-2">
                   <FileText size={16} /> Incident Description
                 </h3>
-                <p className="text-gray-800 text-lg leading-relaxed font-medium bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
-                  {fir.description}
-                </p>
-              </section>
-
-              <section>
-                <h3 className="text-sm font-bold text-gray-400 tracking-widest uppercase mb-4 flex items-center gap-2">
-                  <User size={16} /> Complainant Details
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                    <p className="text-xs text-gray-500 font-bold mb-1">Name</p>
-                    <p className="text-gray-900 font-semibold">{fir.complainant}</p>
-                  </div>
+                <div className="bg-gray-50/50 rounded-2xl p-6 border border-gray-100">
+                  <p className="text-charcoal leading-relaxed whitespace-pre-wrap">{fir.description}</p>
                 </div>
               </section>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <section>
+                  <h3 className="text-sm font-bold text-gray-400 tracking-widest uppercase mb-4 flex items-center gap-2">
+                    <User size={16} /> Complainant Details
+                  </h3>
+                  <div className="bg-gray-50/50 rounded-2xl p-5 border border-gray-100">
+                    <p className="text-xs text-gray-500 mb-1">Name</p>
+                    <p className="font-bold text-charcoal">{fir.complainant}</p>
+                  </div>
+                </section>
+                
+                <section>
+                  <h3 className="text-sm font-bold text-gray-400 tracking-widest uppercase mb-4 flex items-center gap-2">
+                    <MapPin size={16} /> Jurisdiction
+                  </h3>
+                  <div className="bg-gray-50/50 rounded-2xl p-5 border border-gray-100">
+                    <p className="text-xs text-gray-500 mb-1">Police Station</p>
+                    <p className="font-bold text-charcoal">{fir.station}</p>
+                    <p className="text-xs text-gray-500 mt-3 mb-1">Incident Location</p>
+                    <p className="font-bold text-charcoal">{fir.location}</p>
+                  </div>
+                </section>
+              </div>
+
+            </div>
+          </div>
+
+          {/* Right Column: Tracking & Timeline */}
+          <div className="lg:w-96 flex-shrink-0 bg-gray-50/30">
+            
+            <div className="p-6 md:p-10 border-b border-gray-100 bg-white">
+              <h3 className="text-sm font-bold text-gray-400 tracking-widest uppercase mb-4">Investigating Officer</h3>
+              <div className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 shadow-sm">
+                <div className="w-12 h-12 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-bold text-lg">
+                  {fir.officer.charAt(0)}
+                </div>
+                <div>
+                  <p className="font-bold text-charcoal">{fir.officer}</p>
+                  <p className="text-xs text-gray-500">{fir.station}</p>
+                </div>
+              </div>
             </div>
 
-            {/* Right Column: Tracking & Timeline */}
             <div className="p-6 md:p-10 bg-gray-50/30">
               <h3 className="text-sm font-bold text-gray-400 tracking-widest uppercase mb-6 flex items-center gap-2">
                 <ShieldCheck size={16} /> Case Tracking
               </h3>
-              
-              <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-8">
-                <p className="text-xs text-gray-500 font-bold mb-1">Investigating Officer</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
-                    {fir.officer.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="text-gray-900 font-bold">{fir.officer}</p>
-                    <p className="text-xs text-gray-500">{fir.station}</p>
-                  </div>
+
+              <div className="bg-white rounded-2xl p-6 border border-indigo-50 shadow-sm mb-8 text-center relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-5 text-indigo-900">
+                  <ShieldCheck size={80} />
+                </div>
+                <h4 className="text-indigo-900 font-bold font-serif text-lg mb-1 relative z-10">Case Progress</h4>
+                <div className="text-xs font-bold text-indigo-500 uppercase tracking-widest relative z-10">{Math.round(((currentStepIndex + 1) / timelineStages.length) * 100)}% Complete</div>
+                <div className="text-xs text-indigo-400 mt-1 relative z-10">— Stage {currentStepIndex} of {timelineStages.length} —</div>
+                
+                <div className="w-full bg-indigo-50 rounded-full h-2 mt-4 overflow-hidden relative z-10">
+                  <div className="bg-indigo-500 h-2 rounded-full transition-all duration-1000 ease-out" style={{ width: `${Math.round(((currentStepIndex + 1) / timelineStages.length) * 100)}%` }}></div>
                 </div>
               </div>
 
               <div className="relative">
                 <CaseTimeline 
-                  stages={defaultCitizenTimeline} 
-                  currentStep={statusStep - 1} 
-                  totalStages={4} 
+                  stages={timelineStages} 
+                  currentStep={currentStepIndex} 
+                  totalStages={timelineStages.length} 
                 />
               </div>
 

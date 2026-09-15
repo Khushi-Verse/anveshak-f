@@ -13,7 +13,7 @@ export function useNotifications() {
   const { user, token: contextToken } = useAuth();
 
   useEffect(() => {
-    const token = contextToken || localStorage.getItem('token');
+    const token = contextToken || localStorage.getItem('anveshak_token');
     
     // If not authenticated, we don't connect.
     if (!token) return;
@@ -64,7 +64,7 @@ export function useNotifications() {
     
     setUnreadCount(prev => Math.max(0, prev - 1));
 
-    const token = contextToken || localStorage.getItem('token');
+    const token = contextToken || localStorage.getItem('anveshak_token');
     try {
       // Send PATCH request to backend
       await fetch(`${API_URL}/api/notifications/${id}/read`, {

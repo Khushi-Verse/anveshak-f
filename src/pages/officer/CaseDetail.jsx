@@ -202,6 +202,31 @@ export default function CaseDetail() {
     }
   };
 
+  const handleAnalyzeWithAI = async () => {
+    try {
+      const token = localStorage.getItem('anveshak_token');
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+      
+      const res = await fetch(`${API_URL}/case/analyze`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ caseId: caseData.caseId || caseData.id })
+      });
+      
+      if(res.ok) {
+        window.location.reload();
+      } else {
+        const d = await res.json();
+        alert("AI Analysis failed: " + (d.message || d.error));
+      }
+    } catch(err) {
+      alert("Error analyzing case: " + err.message);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-blue-50 to-cyan-50 p-4 md:p-8 font-sans">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -212,10 +237,18 @@ export default function CaseDetail() {
             <ArrowLeft className="w-5 h-5 mr-2" />
             Back to My Cases
           </Link>
-          <button className="flex items-center px-4 py-2 bg-white/70 backdrop-blur-sm border border-violet-200 text-violet-700 rounded-lg hover:bg-violet-50 transition-colors shadow-sm">
-            <Download className="w-4 h-4 mr-2" />
-            Download Case Brief
-          </button>
+          <div className="flex space-x-3">
+            {!caseData.aiAnalysis && (
+              <button onClick={handleAnalyzeWithAI} className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm font-medium">
+                <Activity className="w-4 h-4 mr-2" />
+                Analyze with Gemini
+              </button>
+            )}
+            <button className="flex items-center px-4 py-2 bg-white/70 backdrop-blur-sm border border-violet-200 text-violet-700 rounded-lg hover:bg-violet-50 transition-colors shadow-sm">
+              <Download className="w-4 h-4 mr-2" />
+              Download Case Brief
+            </button>
+          </div>
         </div>
 
         {/* Header Bar */}
@@ -338,25 +371,85 @@ export default function CaseDetail() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 <div className="bg-white/10 rounded-lg p-3">
                   <p className="text-indigo-200 text-xs uppercase font-bold">Classification</p>
-                  <p className="font-semibold">{caseData.aiAnalysis.classification}</p>
+                  <p className="font-semibold">{caseData.aiAnalysis.classification || 'Unknown'}</p>
                 </div>
                 <div className="bg-white/10 rounded-lg p-3">
                   <p className="text-indigo-200 text-xs uppercase font-bold">Confidence</p>
-                  <p className="font-semibold">{caseData.aiAnalysis.confidenceScore}</p>
+                  <p className="font-semibold">{caseData.aiAnalysis.confidence ?? caseData.aiAnalysis.confidenceScore ?? 'N/A'}</p>
                 </div>
                 <div className="bg-white/10 rounded-lg p-3">
                   <p className="text-indigo-200 text-xs uppercase font-bold">Severity</p>
-                  <p className="font-semibold">{caseData.aiAnalysis.severity}</p>
+                  <p className="font-semibold">{caseData.aiAnalysis.severity || 'Unknown'}</p>
                 </div>
               </div>
               <div className="bg-white/10 rounded-lg p-4 mb-4">
                 <p className="text-indigo-200 text-xs uppercase font-bold mb-1">Summary</p>
                 <p className="text-sm leading-relaxed">{caseData.aiAnalysis.summary}</p>
               </div>
-              <div className="bg-white/10 rounded-lg p-4">
+              <div className="bg-white/10 rounded-lg p-4 mb-4">
                 <p className="text-indigo-200 text-xs uppercase font-bold mb-1">Reasoning</p>
-                <p className="text-sm leading-relaxed">{caseData.aiAnalysis.reasoning}</p>
+                <p className="text-sm leading-relaxed">{caseData.aiAnalysis.severityReason || caseData.aiAnalysis.reasoning || 'No reasoning provided.'}</p>
               </div>
+              
+              {(caseData.aiAnalysis.keyInformation?.length > 0 || caseData.aiAnalysis.keywords?.length > 0) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div className="bg-white/10 rounded-lg p-4">
+                    <p className="text-indigo-200 text-xs uppercase font-bold mb-2">Key Information</p>
+                    <ul className="list-disc list-inside text-sm space-y-1">
+                      {caseData.aiAnalysis.keyInformation?.map((info, idx) => (
+                        <li key={idx}>{info}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="bg-white/10 rounded-lg p-4">
+                    <p className="text-indigo-200 text-xs uppercase font-bold mb-2">Keywords</p>
+                    <div className="flex flex-wrap gap-2">
+                      {caseData.aiAnalysis.keywords?.map((kw, idx) => (
+                        <span key={idx} className="bg-indigo-800/50 px-2 py-1 rounded text-xs border border-indigo-500/30">{kw}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {caseData.aiAnalysis.investigationLeads?.length > 0 && (
+                <div className="bg-white/10 rounded-lg p-4 mb-4 border-l-4 border-emerald-400">
+                  <p className="text-emerald-300 text-xs uppercase font-bold mb-2">Investigation Leads</p>
+                  <ul className="list-disc list-inside text-sm space-y-1">
+                    {caseData.aiAnalysis.investigationLeads?.map((lead, idx) => (
+                      <li key={idx}>{lead}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {caseData.aiAnalysis.riskIndicators?.length > 0 && (
+                <div className="bg-white/10 rounded-lg p-4 mb-4 border-l-4 border-red-400">
+                  <p className="text-red-300 text-xs uppercase font-bold mb-2">Risk Indicators</p>
+                  <ul className="list-disc list-inside text-sm space-y-1">
+                    {caseData.aiAnalysis.riskIndicators?.map((risk, idx) => (
+                      <li key={idx}>{risk}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {caseData.aiAnalysis.entities && Object.keys(caseData.aiAnalysis.entities).length > 0 && (
+                <div className="bg-white/10 rounded-lg p-4">
+                  <p className="text-indigo-200 text-xs uppercase font-bold mb-2">Entities Extracted</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                    {Object.entries(caseData.aiAnalysis.entities).map(([type, list]) => {
+                      if (!list || list.length === 0) return null;
+                      return (
+                        <div key={type}>
+                          <span className="text-indigo-300 font-semibold capitalize block mb-1">{type}:</span>
+                          <span className="text-white">{list.join(', ')}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
             )}
             

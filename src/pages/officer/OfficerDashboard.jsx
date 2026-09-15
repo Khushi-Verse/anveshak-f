@@ -26,9 +26,9 @@ export default function OfficerDashboard() {
         if(statsRes.ok) {
            const sData = await statsRes.json();
            setStats({
-             total: sData.stats?.totalCases || 0,
-             active: sData.stats?.byStatus?.find(s => s._id === 'INVESTIGATION')?.count || 0,
-             pending: sData.stats?.byStatus?.find(s => s._id === 'ASSIGNED')?.count || 0,
+             total: sData.totalCases || 0,
+             active: sData.assignedCases || 0,
+             pending: sData.pendingAssignment || 0,
              shared: 2
            });
         }

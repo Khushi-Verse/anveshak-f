@@ -27,6 +27,7 @@ import DataSharing from './pages/officer/DataSharing';
 import AccessControl from './pages/officer/AccessControl';
 import DepartmentChat from './pages/officer/DepartmentChat';
 import AuditLog from './pages/officer/AuditLog';
+import AdvancedAnalytics from './pages/officer/AdvancedAnalytics';
 import SecurityPanel from './pages/officer/SecurityPanel';
 import CourtDashboard from './pages/court/CourtDashboard';
 import CourtCaseDetail from './pages/court/CourtCaseDetail';
@@ -137,6 +138,7 @@ function AppRoutes() {
           <Route path="/officer/access" element={<AccessControl />} />
           <Route path="/officer/chat" element={<DepartmentChat />} />
           <Route path="/officer/audit" element={<AuditLog />} />
+          <Route path="/officer/analytics" element={<AdvancedAnalytics />} />
           <Route path="/officer/security" element={<SecurityPanel />} />
         </Route>
       </Route>
@@ -187,3 +189,5 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
+

@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { mockOfficerCases } from '../../data/mockData';
 import Breadcrumb from '../../components/layout/Breadcrumb';
 import StatusBadge from '../../components/shared/StatusBadge';
-import { Search, Filter, ChevronDown } from 'lucide-react';
+import { Search, Filter, ChevronDown, Loader } from 'lucide-react';
 import { formatDate } from '../../utils/helpers';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,6 +12,44 @@ export default function SmartSearch() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState(null);
   const [filterValue, setFilterValue] = useState('');
+  const [cases, setCases] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchCases = async () => {
+      try {
+        const token = localStorage.getItem('anveshak_token');
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+        
+        const res = await fetch(`${API_URL}/case`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          // Transform backend cases into expected format
+          const formattedCases = (data.cases || data).map(c => ({
+            id: c.caseId || c._id,
+            realId: c._id,
+            title: c.title || c.firId?.incidentDescription?.substring(0, 30) + '...' || 'Investigation',
+            type: c.firId?.incidentCategory || 'General',
+            status: c.status,
+            assignedTo: c.assignedTo ? (c.assignedTo.name || 'Assigned') : 'Pending',
+            lastActivity: c.updatedAt || c.createdAt
+          }));
+          setCases(formattedCases);
+        } else {
+          setError('Failed to fetch cases');
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCases();
+  }, []);
 
   const filters = ['Case Type', 'Date Range', 'Keyword', 'MO Pattern', 'Department', 'Status'];
 
@@ -21,11 +58,11 @@ export default function SmartSearch() {
     { label: t('Smart Search') || 'Smart Search', path: '/officer/search' }
   ];
 
-  const filteredCases = mockOfficerCases.filter(c => {
+  const filteredCases = cases.filter(c => {
     const searchMatch = !searchTerm || 
-      c.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      c.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      c.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (c.assignedTo && c.assignedTo.toLowerCase().includes(searchTerm.toLowerCase()));
 
     if (!activeFilter || !filterValue) return searchMatch;
@@ -34,7 +71,7 @@ export default function SmartSearch() {
     let filterMatch = true;
     switch (activeFilter) {
       case 'Case Type':
-        filterMatch = c.type.toLowerCase().includes(filterValLower);
+        filterMatch = c.type?.toLowerCase().includes(filterValLower);
         break;
       case 'Department':
         filterMatch = c.department && c.department.toLowerCase().includes(filterValLower);

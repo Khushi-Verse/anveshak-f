@@ -1,4 +1,5 @@
 const Case = require("../models/Case");
+const { createNotification } = require("../controllers/notificationController");
 
 const {
   createTimelineEvent,
@@ -228,6 +229,28 @@ const updateCaseStatus = async (
     console.log(
       "=========================================="
     );
+
+    // Trigger notifications for status change
+    try {
+      if (caseData.citizenId) {
+        await createNotification({
+          userId: caseData.citizenId,
+          caseId: caseData.caseId,
+          type: "STATUS_CHANGED",
+          message: `Case ${caseData.caseId} status updated to ${caseData.status}`
+        });
+      }
+      if (caseData.assignedOfficer) {
+        await createNotification({
+          userId: caseData.assignedOfficer,
+          caseId: caseData.caseId,
+          type: "STATUS_CHANGED",
+          message: `Case ${caseData.caseId} status updated to ${caseData.status}`
+        });
+      }
+    } catch(notifError) {
+       console.error("Failed to send status update notification", notifError);
+    }
 
     return caseData;
   } catch (error) {

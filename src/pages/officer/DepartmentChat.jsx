@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import Breadcrumb from '../../components/layout/Breadcrumb';
 import FormalCaseChat from '../../components/shared/FormalCaseChat';
@@ -11,21 +11,47 @@ import { MessageSquare, Hash, ChevronRight } from 'lucide-react';
  */
 export default function DepartmentChat() {
   const { t } = useLanguage();
-  const [selectedCase, setSelectedCase] = useState('CASE-2026-DL-1198');
+  const [selectedCase, setSelectedCase] = useState('');
+  const [caseChannels, setCaseChannels] = useState([]);
+
+  useEffect(() => {
+    const fetchCases = async () => {
+      try {
+        const token = localStorage.getItem('anveshak_token');
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+        const res = await fetch(`${API_URL}/case/assigned-to-me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const cases = data.cases || data;
+          const channels = cases.map(c => ({
+            id: c.caseId || c._id,
+            name: c.title || c.firId?.incidentDescription?.substring(0, 30) + '...',
+            stage: c.status
+          }));
+          setCaseChannels(channels);
+          if (channels.length > 0) {
+            setSelectedCase(channels[0].id);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load cases", err);
+      }
+    };
+    fetchCases();
+  }, []);
 
   const breadcrumbs = [
     { label: t('Home') || 'Home', path: '/' },
     { label: t('Case Collaboration') || 'Case Collaboration', path: '/officer/chat' }
   ];
 
-  const caseChannels = [
-    { id: 'CASE-2026-DL-1198', name: 'Cyber Fraud Network — Multi-state Operation', stage: 'Under Investigation' },
-    { id: 'CASE-2026-DL-1142', name: 'Vehicle Theft Ring — Connaught Place', stage: 'Investigation' },
-    { id: 'CASE-2026-DL-0987', name: 'Road Rage Assault — ITO', stage: 'Court Registered' },
-    { id: 'CASE-2026-DL-1256', name: 'Drug Trafficking — IGI Airport Seizure', stage: 'Under Investigation' },
-  ];
-
   const activeChannel = caseChannels.find(c => c.id === selectedCase) || caseChannels[0];
+
+  if (!activeChannel) {
+    return <div className="p-8 text-center text-gray-500">Loading your cases...</div>;
+  }
 
   return (
     <div className="space-y-4">

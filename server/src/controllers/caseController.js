@@ -794,6 +794,21 @@ const addTimelineEvent = async (req, res) => {
   }
 };
 
+const getSystemAuditLogs = async (req, res) => {
+  try {
+    const AuditLog = require('../models/AuditLog');
+    let query = {};
+    if (req.user.role === 'POLICE') {
+      // In a real app we'd filter to assigned cases, but for this demo police see all
+      query = {};
+    }
+    const logs = await AuditLog.find(query).populate('userId', 'name email role').sort({ createdAt: -1 }).limit(200);
+    return res.status(200).json(logs);
+  } catch (err) {
+    return res.status(500).json({ message: 'Error fetching logs', error: err.message });
+  }
+};
+
 module.exports = {
   addTimelineEvent,
   createCaseFromFIR,
@@ -803,6 +818,7 @@ module.exports = {
   getSingleCase,
   getAssignedCases,
   getCaseAuditLogs,
+  getSystemAuditLogs,
   getCaseStats,
   getTimeline,
   analyzeCaseWithAI,

@@ -9,6 +9,9 @@ import { ShieldCheck, Share2, Clock, CheckCircle } from 'lucide-react';
 export default function DataSharing() {
   const { t } = useLanguage();
   const [toastMessage, setToastMessage] = useState('');
+  const [realCases, setRealCases] = useState([]);
+  const [sharedCases, setSharedCases] = useState([]);
+  const [selectedCase, setSelectedCase] = useState('');
 
   const agencies = ['CBI', 'ED', 'Customs', 'State Police'];
   const durations = ['24h', '48h', '7 days', '30 days'];
@@ -17,6 +20,31 @@ export default function DataSharing() {
     { label: t('Home') || 'Home', path: '/' },
     { label: t('Data Sharing') || 'Data Sharing', path: '/officer/sharing' }
   ];
+
+  React.useEffect(() => {
+    const fetchCases = async () => {
+      try {
+        const token = localStorage.getItem('anveshak_token');
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+        const res = await fetch(`${API_URL}/case`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const d = await res.json();
+          let cases = [];
+          if (Array.isArray(d)) cases = d;
+          else if (Array.isArray(d.cases)) cases = d.cases;
+          else if (Array.isArray(d.data)) cases = d.data;
+          
+          setRealCases(cases);
+          setSharedCases(cases.slice(0, 3)); // simulate shared cases with first 3 real cases
+        }
+      } catch (err) {
+        console.error("Failed to fetch cases for data sharing", err);
+      }
+    };
+    fetchCases();
+  }, []);
 
   const handleRequest = (e) => {
     e.preventDefault();
@@ -36,18 +64,16 @@ export default function DataSharing() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-navy/10 rounded-lg text-navy">
-              <Share2 className="w-5 h-5" />
-            </div>
-            <h2 className="text-lg font-semibold text-charcoal">{t('Request Cross-Agency Access') || 'Request Cross-Agency Access'}</h2>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="bg-navy-50/50 px-6 py-4 border-b border-navy-100 flex items-center">
+            <Share2 className="w-5 h-5 text-navy mr-2" />
+            <h2 className="text-lg font-semibold text-charcoal">Request Cross-Agency Access</h2>
           </div>
 
-          <form onSubmit={handleRequest} className="space-y-4">
+          <form onSubmit={handleRequest} className="p-6 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Target Agency</label>
-              <select className="w-full border-gray-300 rounded-lg shadow-sm p-2 border focus:ring-navy focus:border-navy">
+              <select className="w-full border-gray-300 rounded-lg shadow-sm p-2 border focus:ring-navy focus:border-navy" required>
                 <option value="">Select Agency</option>
                 {agencies.map(a => <option key={a} value={a}>{a}</option>)}
               </select>
@@ -55,9 +81,14 @@ export default function DataSharing() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Select Case</label>
-              <select className="w-full border-gray-300 rounded-lg shadow-sm p-2 border focus:ring-navy focus:border-navy">
+              <select 
+                className="w-full border-gray-300 rounded-lg shadow-sm p-2 border focus:ring-navy focus:border-navy"
+                value={selectedCase}
+                onChange={(e) => setSelectedCase(e.target.value)}
+                required
+              >
                 <option value="">Select Case</option>
-                {mockOfficerCases.map(c => <option key={c.id} value={c.id}>{c.id} - {c.title}</option>)}
+                {realCases.map(c => <option key={c._id || c.id} value={c._id || c.id}>{c.caseId || c.id} - {c.category || c.type || 'Unknown'}</option>)}
               </select>
             </div>
 
@@ -101,36 +132,35 @@ export default function DataSharing() {
           </div>
 
           <div className="space-y-4">
-            {mockSharedAccess.map(access => {
-              const timeRemaining = getTimeRemaining(access.expiresAt);
-              const isExpired = timeRemaining === 'Expired' || timeRemaining === null;
+            {sharedCases.map(c => {
+              const isExpired = c.status === 'Closed';
               return (
-                <div key={access.id} className="p-4 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div key={c._id || c.id} className="p-4 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <h3 className="font-semibold text-navy">{access.caseId}</h3>
-                      <p className="text-xs text-gray-500">Shared by: {access.sharedBy}</p>
+                      <h3 className="font-semibold text-navy">{c.caseId || c.id}</h3>
+                      <p className="text-xs text-gray-500">Shared by: {c.assignedTo?.name || 'System'}</p>
                     </div>
-                    <StatusBadge status={access.status} />
+                    <StatusBadge status={isExpired ? 'Expired' : 'Active'} />
                   </div>
                   
                   <div className="mt-3 text-sm text-gray-600">
-                    <p><strong>Documents:</strong> {access.documents.join(', ')}</p>
+                    <p><strong>Category:</strong> {c.category || c.type || 'Unknown'}</p>
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
                     <div className="flex items-center gap-1 text-sm font-medium text-gray-600">
                       <Clock className="w-4 h-4" />
                       {isExpired ? (
-                        <span className="text-alert">Expired</span>
-                      ) : access.status === 'permanent' ? (
-                        <span className="text-forest">Permanent Access</span>
+                        <span className="text-red-500">Expired</span>
                       ) : (
-                        <span>{timeRemaining}</span>
+                        <span className="text-emerald-600">Active</span>
                       )}
                     </div>
                     {!isExpired && (
-                      <button className="text-sm font-medium text-navy hover:underline">View Access</button>
+                      <button className="text-sm font-medium text-navy hover:text-navy-700 underline">
+                        Access Documents
+                      </button>
                     )}
                   </div>
                 </div>

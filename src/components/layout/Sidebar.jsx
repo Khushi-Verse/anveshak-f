@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 
-import { X, LayoutDashboard, Search, Briefcase, Upload, Share2, ShieldCheck, MessageSquare, FileText, Lock, ChevronLeft, ChevronRight, Scale } from 'lucide-react';
+import { X, BarChart3, LayoutDashboard, Search, Briefcase, Upload, Share2, ShieldCheck, MessageSquare, FileText, Lock, ChevronLeft, ChevronRight, Scale } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useState } from 'react';
@@ -20,6 +20,7 @@ export default function Sidebar({ isOpen, onClose }) {
     { to: '/officer/access', icon: ShieldCheck, label: t('officer.accessControl') },
     { to: '/officer/chat', icon: MessageSquare, label: t('officer.chat') },
     { to: '/officer/audit', icon: FileText, label: t('officer.auditLog') },
+    { to: '/officer/analytics', icon: BarChart3, label: t('officer.advancedAnalytics') || 'Analytics' },
     { to: '/officer/security', icon: Lock, label: t('officer.security') },
   ];
 
@@ -103,3 +104,5 @@ export default function Sidebar({ isOpen, onClose }) {
     </>
   );
 }
+
+

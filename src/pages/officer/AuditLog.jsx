@@ -1,24 +1,61 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FileText, Download, Filter, Calendar, User, Search } from 'lucide-react';
 import AuditTrail from '../../components/shared/AuditTrail';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { mockAuditLog } from '../../data/mockData';
 import { formatDateTime } from '../../utils/helpers';
 
 export default function AuditLog() {
   const { t } = useLanguage();
   const [filterUser, setFilterUser] = useState('');
   const [filterAction, setFilterAction] = useState('');
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const uniqueUsers = [...new Set(mockAuditLog.map(l => l.user))];
-  const uniqueActions = [...new Set(mockAuditLog.map(l => l.action))];
+  useEffect(() => {
+    const fetchAllLogs = async () => {
+      try {
+        const token = localStorage.getItem('anveshak_token');
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+        const res = await fetch(`${API_URL}/case/audit/all`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const d = data.data || data;
+          const mappedLogs = d.map(l => ({
+             id: l._id || l.id,
+             action: l.action || 'ACTION_UNKNOWN',
+             timestamp: l.createdAt || new Date().toISOString(),
+             user: l.userId?.name || 'System',
+             target: l.caseId || 'N/A',
+             details: l.details || l.notes || 'No details provided'
+          }));
+          setLogs(mappedLogs);
+        }
+      } catch(e) {
+        console.error("Failed to fetch logs", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAllLogs();
+  }, []);
+
+  const uniqueUsers = [...new Set(logs.map(l => l.by?.name || l.by))].filter(Boolean);
+  const uniqueActions = [...new Set(logs.map(l => l.action))].filter(Boolean);
+
+  const filteredLogs = logs.filter(l => {
+    const userMatch = !filterUser || (l.by?.name || l.by) === filterUser;
+    const actionMatch = !filterAction || l.action === filterAction;
+    return userMatch && actionMatch;
+  });
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-charcoal">{t('officer.auditLog')}</h1>
+          <h1 className="text-2xl font-bold text-charcoal">{t('officer.auditLog') || 'Audit Log'}</h1>
           <p className="text-sm text-charcoal-muted mt-1">Complete record of all platform activity</p>
         </div>
         <button className="pill-btn bg-navy text-white hover:bg-navy-700 text-sm">
@@ -60,7 +97,11 @@ export default function AuditLog() {
       </div>
 
       {/* Audit Trail Table */}
-      <AuditTrail limit={50} />
+      {loading ? (
+        <div className="p-8 text-center text-gray-500">Loading logs...</div>
+      ) : (
+        <AuditTrail limit={50} logs={filteredLogs} />
+      )}
 
       {/* Info footer */}
       <div className="bg-navy-50 rounded-xl p-4 flex items-start gap-3">

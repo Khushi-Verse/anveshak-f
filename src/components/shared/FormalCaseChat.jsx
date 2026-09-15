@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   MessageSquare, Users, Pin, Paperclip, Send, AtSign, 
   Eye, FileText, File, ExternalLink, ChevronDown, ChevronRight,
   Menu, X
 } from 'lucide-react';
-import { mockCaseParticipants, mockFormalMessages } from '../../data/mockData';
 
 // Helper to get role colors based on role name
 const getRoleStyles = (role) => {
@@ -31,8 +30,8 @@ const getVisibilityStyles = (visibility) => {
 };
 
 const FormalCaseChat = ({ caseId = 'CASE-0000', caseName = 'Untitled Case', currentStage = 'Investigation' }) => {
-  const [messages, setMessages] = useState(Array.isArray(mockFormalMessages) ? mockFormalMessages : []);
-  const [participants, setParticipants] = useState(Array.isArray(mockCaseParticipants) ? mockCaseParticipants : []);
+  const [messages, setMessages] = useState([]);
+  const [participants, setParticipants] = useState([]);
   
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [composeSubject, setComposeSubject] = useState('');
@@ -40,7 +39,47 @@ const FormalCaseChat = ({ caseId = 'CASE-0000', caseName = 'Untitled Case', curr
   const [visibility, setVisibility] = useState('All Participants');
   const [mentionDropdownOpen, setMentionDropdownOpen] = useState(false);
 
-  // Group participants by role — guard against non-array
+  useEffect(() => {
+    const fetchChat = async () => {
+      try {
+        const token = localStorage.getItem('anveshak_token');
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+        
+        // Fetch participants (mock for now as backend may not have an explicit participants route)
+        setParticipants([
+          { id: 'u1', name: 'Insp. Priya Sharma', role: 'Police', designation: 'Investigating Officer' },
+          { id: 'u2', name: 'Dr. A. Verma', role: 'Forensics', designation: 'Lead Analyst' },
+          { id: 'u3', name: 'Hon. Justice K. Rao', role: 'Judiciary', designation: 'District Judge' }
+        ]);
+
+        const res = await fetch(`${API_URL}/chat/case/${caseId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if(res.ok) {
+          const data = await res.json();
+          // Transform backend chat format to UI format
+          const formatted = (data.messages || data).map(m => ({
+            id: m._id || m.id,
+            senderName: m.senderId?.name || 'User',
+            senderDesignation: m.senderId?.role || 'Officer',
+            senderRole: m.senderId?.role || 'Police',
+            timestamp: m.createdAt || new Date().toISOString(),
+            subject: (m.text || '').substring(0, 20) + '...',
+            body: m.text,
+            visibility: 'All Participants',
+            isPinned: false,
+            attachments: []
+          }));
+          setMessages(formatted);
+        }
+      } catch(err) {
+        console.error("Failed to load chat", err);
+      }
+    };
+    fetchChat();
+  }, [caseId]);
+
+  // Group participants by role
   const groupedParticipants = (Array.isArray(participants) ? participants : []).reduce((acc, p) => {
     const role = p.role || 'Other';
     if (!acc[role]) acc[role] = [];
@@ -48,26 +87,43 @@ const FormalCaseChat = ({ caseId = 'CASE-0000', caseName = 'Untitled Case', curr
     return acc;
   }, {});
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!composeBody.trim() || !composeSubject.trim()) return;
+    if (!composeBody.trim()) return;
 
-    const newMessage = {
-      id: `msg-${Date.now()}`,
-      senderName: 'Current User',
-      senderDesignation: 'Investigating Officer',
-      senderRole: 'Police',
-      timestamp: new Date().toISOString(),
-      subject: composeSubject,
-      body: composeBody,
-      visibility: visibility,
-      isPinned: false,
-      attachments: []
-    };
-
-    setMessages([...messages, newMessage]);
-    setComposeSubject('');
-    setComposeBody('');
+    try {
+        const token = localStorage.getItem('anveshak_token');
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+        const res = await fetch(`${API_URL}/chat/case/${caseId}`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}` 
+          },
+          body: JSON.stringify({ text: composeBody })
+        });
+        if(res.ok) {
+          const response = await res.json();
+          const savedMsg = response.data || response;
+          const newMessage = {
+            id: savedMsg._id || `msg-${Date.now()}`,
+            senderName: savedMsg.senderId?.name || 'Current User',
+            senderDesignation: savedMsg.senderId?.role || 'Investigating Officer',
+            senderRole: savedMsg.senderId?.role || 'Police',
+            timestamp: savedMsg.createdAt || new Date().toISOString(),
+            subject: composeSubject || composeBody.substring(0, 20),
+            body: composeBody,
+            visibility: visibility,
+            isPinned: false,
+            attachments: []
+          };
+          setMessages([...messages, newMessage]);
+          setComposeSubject('');
+          setComposeBody('');
+        }
+    } catch (err) {
+       console.error("Failed to send message", err);
+    }
   };
 
   const insertMention = (name) => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import Breadcrumb from '../../components/layout/Breadcrumb';
 import { FileText, BarChart, Shield, UploadCloud, Lock, CheckCircle2 } from 'lucide-react';
@@ -7,34 +7,131 @@ import { formatDate } from '../../utils/helpers';
 export default function ResourceUpload() {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('Documents');
-  const [uploadedFiles, setUploadedFiles] = useState([
-    { id: 1, name: 'FIR_Copy_1198.pdf', size: '2.4 MB', date: new Date().toISOString(), type: 'Documents' },
-    { id: 2, name: 'Forensic_Report_A.pdf', size: '5.1 MB', date: new Date().toISOString(), type: 'Reports' },
-    { id: 3, name: 'CCTV_Footage_Extract.mp4', size: '15.8 MB', date: new Date().toISOString(), type: 'Evidence' },
-  ]);
+  const [cases, setCases] = useState([]);
+  const [selectedCase, setSelectedCase] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState(null);
+  const fileInputRef = useRef(null);
+  const [currentFiles, setCurrentFiles] = useState([]);
+
+  useEffect(() => {
+    const fetchCases = async () => {
+      try {
+        const token = localStorage.getItem('anveshak_token');
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+        const res = await fetch(`${API_URL}/case`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setCases(data.cases || data);
+          if ((data.cases || data).length > 0) {
+            setSelectedCase((data.cases || data)[0].caseId || (data.cases || data)[0]._id);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load cases", err);
+      }
+    };
+    fetchCases();
+  }, []);
+
+  useEffect(() => {
+    const fetchEvidence = async () => {
+      if (!selectedCase) return;
+      try {
+        const token = localStorage.getItem('anveshak_token');
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+        const res = await fetch(`${API_URL}/case/${selectedCase}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.evidence) {
+             setCurrentFiles(data.evidence.map(e => ({
+                id: e._id || e.evidenceId,
+                name: e.fileName || 'Document',
+                size: 'Encrypted',
+                date: e.createdAt,
+                type: 'Documents',
+                verificationStatus: e.verificationStatus
+             })));
+          } else {
+             setCurrentFiles([]);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch evidence", err);
+      }
+    };
+    fetchEvidence();
+  }, [selectedCase]);
 
   const breadcrumbs = [
     { label: t('Home') || 'Home', path: '/' },
     { label: t('Resource Upload') || 'Resource Upload', path: '/officer/upload' }
   ];
 
-  const handleUpload = () => {
-    setIsUploading(true);
-    setTimeout(() => {
-      const newFile = {
-        id: Date.now(),
-        name: `New_Upload_${activeTab}_${Date.now()}.pdf`,
-        size: '1.2 MB',
-        date: new Date().toISOString(),
-        type: activeTab
-      };
-      setUploadedFiles([newFile, ...uploadedFiles]);
-      setIsUploading(false);
-    }, 1000);
+  const handleDivClick = () => {
+    fileInputRef.current?.click();
   };
 
-  const currentFiles = uploadedFiles.filter(f => f.type === activeTab);
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!selectedCase) {
+      alert("Please select a case first");
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadMessage(null);
+
+    try {
+      const token = localStorage.getItem('anveshak_token');
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('caseId', selectedCase);
+      formData.append('description', `Uploaded as ${activeTab}`);
+
+      const res = await fetch(`${API_URL}/evidence/upload`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+
+      if (res.ok) {
+        setUploadMessage({ type: 'success', text: 'File uploaded successfully!' });
+        
+        // Refresh evidence list
+        const caseRes = await fetch(`${API_URL}/case/${selectedCase}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (caseRes.ok) {
+          const caseData = await caseRes.json();
+          if (caseData.evidence) {
+             setCurrentFiles(caseData.evidence.map(ev => ({
+                id: ev._id || ev.evidenceId,
+                name: ev.fileName || 'Document',
+                size: 'Encrypted',
+                date: ev.createdAt,
+                type: 'Documents',
+                verificationStatus: ev.verificationStatus
+             })));
+          }
+        }
+      } else {
+        const data = await res.json();
+        setUploadMessage({ type: 'error', text: data.message || 'Upload failed' });
+      }
+    } catch (err) {
+      setUploadMessage({ type: 'error', text: err.message });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   const getIcon = (type) => {
     if (type === 'Documents') return <FileText className="w-6 h-6 text-blue-500" />;
@@ -46,6 +143,27 @@ export default function ResourceUpload() {
   return (
     <div className="space-y-6">
       <Breadcrumb items={breadcrumbs} />
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center justify-between">
+        <label className="font-medium text-charcoal">{t('Select Case') || 'Select Case'}:</label>
+        <select 
+          value={selectedCase} 
+          onChange={(e) => setSelectedCase(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy"
+        >
+          {cases.map(c => (
+            <option key={c.caseId || c._id} value={c.caseId || c._id}>
+              {c.caseNumber || c.title || c.caseId || c._id}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {uploadMessage && (
+        <div className={`p-4 rounded-lg text-sm ${uploadMessage.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+          {uploadMessage.text}
+        </div>
+      )}
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="flex border-b border-gray-100">
@@ -65,8 +183,14 @@ export default function ResourceUpload() {
         </div>
 
         <div className="p-6">
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            className="hidden" 
+          />
           <div 
-            onClick={handleUpload}
+            onClick={handleDivClick}
             className="dropzone w-full p-12 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 hover:bg-gray-100 hover:border-navy transition-all cursor-pointer flex flex-col items-center justify-center text-center"
           >
             {isUploading ? (
