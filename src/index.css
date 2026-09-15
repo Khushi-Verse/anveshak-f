@@ -284,135 +284,135 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
-/* ═══════════════════════════ ANIMATIONS ═══════════════════════════ */
-@keyframes badgePulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.15); }
-}
-.badge-pulse { animation: badgePulse 2s ease-in-out infinite; }
+/* =========================================
+   ANVESHAK TRICOLOR HERO BACKGROUND
+   ========================================= */
 
-@keyframes statusGlow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-.status-glow { animation: statusGlow 2s ease-in-out infinite; }
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-.shimmer {
-  overflow: hidden;
-  position: relative;
-}
-.shimmer::after {
-  content: '';
+.tricolor-background {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  animation: shimmer 3s infinite;
+  z-index: 0;
+
+  background:
+    linear-gradient(
+      to bottom,
+      #fff0dc 0%,
+      #fff8ef 30%,
+      #ffffff 50%,
+      #ffffff 58%,
+      #edf9f0 78%,
+      #d5efdf 100%
+    );
 }
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.fade-in-up {
-  animation: fadeInUp 0.8s ease-out forwards;
-}
-.fade-in-up-delay-1 { animation-delay: 0.1s; opacity: 0; }
-.fade-in-up-delay-2 { animation-delay: 0.2s; opacity: 0; }
-.fade-in-up-delay-3 { animation-delay: 0.3s; opacity: 0; }
-.fade-in-up-delay-4 { animation-delay: 0.4s; opacity: 0; }
+/* Soft saffron and green side shades */
+.tricolor-background::before {
+  content: "";
+  position: absolute;
+  inset: 0;
 
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
-}
-.scale-in {
-  animation: scaleIn 0.5s ease-out forwards;
-}
-
-/* Image hover zoom */
-.img-zoom {
-  overflow: hidden;
-  border-radius: 1rem;
-}
-.img-zoom img {
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.img-zoom:hover img {
-  transform: scale(1.08);
+  background:
+    radial-gradient(
+      circle at 0% 35%,
+      rgba(255, 153, 51, 0.32),
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at 100% 70%,
+      rgba(19, 136, 8, 0.28),
+      transparent 40%
+    );
 }
 
-/* Stats counter glow */
-.stat-glow {
-  text-shadow: 0 0 40px rgba(255, 107, 53, 0.3);
+/* =========================================
+   ASHOKA CHAKRA
+   ========================================= */
+
+.ashoka-chakra {
+  position: absolute;
+  z-index: 1;
+
+  top: 50%;
+  right: -75px;
+
+  width: 330px;
+  height: 330px;
+
+  transform: translateY(-50%);
+
+  border: 9px solid rgba(0, 71, 171, 0.28);
+  border-radius: 50%;
+
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(0, 71, 171, 0.3) 0deg 2deg,
+    transparent 2deg 15deg
+  );
+
+  opacity: 1;
 }
 
-/* Scrolling ticker */
-@keyframes ticker {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-.ticker-scroll {
-  animation: ticker 30s linear infinite;
+/* Inner Chakra circle */
+.chakra-inner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  width: 105px;
+  height: 105px;
+
+  transform: translate(-50%, -50%);
+
+  border: 7px solid rgba(0, 71, 171, 0.32);
+  border-radius: 50%;
 }
 
-/* ═══════════════════════════ NEW COOL ANIMATIONS ═══════════════════════════ */
-@keyframes popupBounce {
-  0% { transform: scale(0.5) translateY(50px); opacity: 0; }
-  60% { transform: scale(1.1) translateY(-10px); opacity: 1; }
-  100% { transform: scale(1) translateY(0); opacity: 1; }
-}
-.animate-popup {
-  animation: popupBounce 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+/* Chakra center */
+.chakra-inner::after {
+  content: "";
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  width: 20px;
+  height: 20px;
+
+  transform: translate(-50%, -50%);
+
+  border-radius: 50%;
+  background: rgba(0, 71, 171, 0.42);
 }
 
-.animate-popup-delay-1 { animation-delay: 0.15s; opacity: 0; }
-.animate-popup-delay-2 { animation-delay: 0.3s; opacity: 0; }
-.animate-popup-delay-3 { animation-delay: 0.45s; opacity: 0; }
-
-@keyframes textGradientMove {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-.animate-text-gradient {
-  background-size: 200% auto;
-  animation: textGradientMove 4s linear infinite;
+/* Responsive Chakra */
+@media (max-width: 1100px) {
+  .ashoka-chakra {
+    right: -125px;
+    width: 280px;
+    height: 280px;
+  }
 }
 
-@keyframes floatRotate {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  25% { transform: translateY(-10px) rotate(2deg); }
-  75% { transform: translateY(10px) rotate(-2deg); }
-}
-.animate-float-rotate {
-  animation: floatRotate 6s ease-in-out infinite;
+@media (max-width: 768px) {
+  .ashoka-chakra {
+    right: -120px;
+    width: 240px;
+    height: 240px;
+    opacity: 0.65;
+  }
+
+  .chakra-inner {
+    width: 82px;
+    height: 82px;
+    border-width: 5px;
+  }
 }
 
-@keyframes spinChakraClockwise {
-  from { transform: translate(-50%, -50%) rotate(0deg); }
-  to { transform: translate(-50%, -50%) rotate(360deg); }
+@media (max-width: 480px) {
+  .ashoka-chakra {
+    right: -135px;
+    width: 220px;
+    height: 220px;
+    opacity: 0.45;
+  }
 }
-.animate-spin-chakra {
-  animation: spinChakraClockwise 90s linear infinite;
-}
-
-@keyframes pulseSovereignGlow {
-  0%, 100% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.03); opacity: 1; }
-}
-.animate-sovereign-pulse {
-  animation: pulseSovereignGlow 4s ease-in-out infinite;
-}
-
-@keyframes shimmerSweep {
-  0% { transform: translateX(-150%); }
-  100% { transform: translateX(150%); }
-}
-.animate-shimmer {
-  animation: shimmerSweep 3s infinite linear;
-}
-

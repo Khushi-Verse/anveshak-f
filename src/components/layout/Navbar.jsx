@@ -151,10 +151,11 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              <Link
-                to="/login"
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold bg-navy text-white hover:bg-navy-700 transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5"
-              >
+            <Link
+                 to="/login"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold bg-[#F28C28] text-white hover:bg-[#D97706] transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5"
+>
+
                 <LogIn className="w-4 h-4" />
                 <span>{t('nav.login')}</span>
               </Link>
