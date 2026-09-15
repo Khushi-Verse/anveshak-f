@@ -257,12 +257,12 @@ export default function Landing() {
   const activeServices = activeTab === 'citizens' ? citizenServices : officerServices;
 
   return (
-    <div className="min-h-screen bg-cream overflow-hidden">
+    <div className="min-h-screen bg-cream overflow-x-hidden">
       
       {/* ═══════════ HERO CAROUSEL MOVED BELOW HERO SECTION ═══════════ */}
 
       {/* ═══════════ HERO SECTION — Light Green & Light Orange Minimalist UI ═══════════ */}
-      <section ref={heroReveal.ref} className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-amber-50/60 to-orange-50/70 min-h-[90vh] flex flex-col justify-center pt-28 pb-16 sm:pt-36 sm:pb-20">
+      <section ref={heroReveal.ref} className="relative mt-16 lg:mt-20 overflow-x-hidden bg-gradient-to-br from-emerald-50 via-amber-50/60 to-orange-50/70 min-h-[calc(100vh-4rem)] lg:min-h-[calc(100vh-5rem)] flex flex-col justify-center pt-28 pb-16 sm:pt-36 sm:pb-20">
         {/* Animated Subtle Ambient Glows */}
         <div className="absolute inset-0 overflow-hidden">
           {/* Base backdrop blur filter */}
