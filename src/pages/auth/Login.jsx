@@ -92,7 +92,7 @@ export default function Login() {
   ];
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col items-center justify-center p-4">
+   <div className="min-h-screen bg-cream flex flex-col items-center justify-center p-4 pt-24">
       <div className="fixed inset-0 pointer-events-none overflow-hidden flex items-center justify-center">
         <div className="absolute w-[800px] h-[800px] bg-navy/5 rounded-full blur-3xl float-slow"></div>
         <div className="absolute w-[600px] h-[600px] bg-saffron/5 rounded-full blur-3xl float-medium transform translate-x-1/4 -translate-y-1/4"></div>
@@ -219,9 +219,7 @@ export default function Login() {
               })}
             </div>
             
-            <Link to="/" className="mt-12 text-navy/70 hover:text-navy font-medium underline-offset-4 hover:underline transition-colors">
-              Back to Gateway
-            </Link>
+            
           </div>
         )}
       </div>

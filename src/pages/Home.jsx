@@ -546,7 +546,7 @@ const [voiceImgIdx, setVoiceImgIdx] = useState(0);
               aria-label={t(`roles.${key}`)}
               style={{ animationDelay: `${i * 0.1}s` }}
             >
-              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${iconBg} flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+             <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${iconBg} flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                 <Icon className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-sm font-bold text-charcoal mb-1">{t(`roles.${key}`)}</h3>
@@ -719,9 +719,9 @@ const [voiceImgIdx, setVoiceImgIdx] = useState(0);
                 )}
                 <div className="glass-card p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
-                      {num}
-                    </div>
+                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+  {num}
+</div>
                     <Icon className="w-5 h-5 text-charcoal-muted" />
                   </div>
                   <h3 className="text-base font-bold text-charcoal mb-2">{t(titleKey)}</h3>
