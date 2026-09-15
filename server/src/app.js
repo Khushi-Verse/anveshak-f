@@ -1,4 +1,3 @@
-
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -38,6 +37,13 @@ app.get("/", (req, res) => {
   res.send("Anveshak Backend is running");
 });
 
+app.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+    service: "ANVESHAK backend"
+  });
+});
+
 const PORT = process.env.PORT || 5003;
 
 const server = http.createServer(app);
@@ -48,9 +54,9 @@ const startServer = async () => {
   try {
     await connectDB();
 
-    server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-});
+    server.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on port ${PORT}`);
+    });
   } catch (error) {
     console.error("Failed to start server:", error.message);
     process.exit(1);
