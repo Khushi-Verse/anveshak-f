@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight, Search, Sparkles, AlertTriangle, FileSearch,
   Users, Shield, Building2, Scale, Share2, Bell, Mic, Lock,
-  ClipboardList, CheckCircle, UserPlus, Send, Eye, ChevronRight,
-  ChevronLeft, Play, Globe, Zap, TrendingUp, MapPin, BarChart3,
+  ClipboardList, CheckCircle, UserPlus, Send, Eye,
+   Play, Globe, Zap, TrendingUp, MapPin, BarChart3,
   MessageSquare, Phone, Award, ArrowUpRight, MousePointerClick, Cpu, FileText
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -108,7 +110,7 @@ export default function Landing() {
   const [activeFeature, setActiveFeature] = useState(0);
   const [testimonialIdx, setTestimonialIdx] = useState(0);
   const searchRef = useRef(null);
-
+const [voiceImgIdx, setVoiceImgIdx] = useState(0);
   // Scroll reveal for sections
   const heroReveal = useScrollReveal(0.1);
   const cardsReveal = useScrollReveal();
@@ -738,63 +740,67 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ═══════════ TESTIMONIALS CAROUSEL ═══════════ */}
-      <section className="py-16 lg:py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl sm:text-4xl font-bold text-charcoal mb-3">Voices of Change</h2>
-            <p className="text-charcoal-muted">What our users say about Anveshak</p>
-          </div>
+   {/* ═══════════ VOICES OF CHANGE IMAGE SLIDER ═══════════ */}
+<section className="py-16 lg:py-20">
+  <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="text-center mb-10">
+      <h2 className="text-3xl sm:text-4xl font-bold text-charcoal mb-3">
+        Voices of Change
+      </h2>
 
-          <div className="relative">
-            <div className="glass-card p-8 sm:p-10 text-center">
-              <div className="w-16 h-16 rounded-full overflow-hidden mx-auto mb-5 ring-4 ring-saffron/20">
-                <img
-                  src={testimonials[testimonialIdx].avatar}
-                  alt={testimonials[testimonialIdx].name}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
-              </div>
-              <p className="text-base sm:text-lg text-charcoal leading-relaxed mb-5 font-serif italic max-w-2xl mx-auto">
-                "{testimonials[testimonialIdx].text}"
-              </p>
-              <p className="text-sm font-bold text-charcoal">{testimonials[testimonialIdx].name}</p>
-              <p className="text-xs text-charcoal-muted">{testimonials[testimonialIdx].role}</p>
+      <p className="text-charcoal-muted">
+        Explore the impact and journey of Anveshak
+      </p>
+    </div>
 
-              {/* Dots */}
-              <div className="flex items-center justify-center gap-2 mt-6">
-                {testimonials.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setTestimonialIdx(i)}
-                    className={`rounded-full transition-all duration-300 ${
-                      i === testimonialIdx ? 'w-8 h-2 bg-navy' : 'w-2 h-2 bg-navy/20 hover:bg-navy/40'
-                    }`}
-                    aria-label={`Testimonial ${i + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
+    <div className="relative">
+      <div className="glass-card overflow-hidden rounded-3xl">
+        <img
+          src={`/voices/${voiceImgIdx + 1}.jpg`}
+          alt={`Voices of Change image ${voiceImgIdx + 1}`}
+          className="w-full h-64 sm:h-96 lg:h-[480px] object-cover transition-opacity duration-500"
+          loading="lazy"
+        />
 
-            {/* Nav arrows */}
+        {/* Slider dots */}
+        <div className="flex justify-center items-center gap-2 py-5">
+          {[0, 1, 2].map((index) => (
             <button
-              onClick={() => setTestimonialIdx((testimonialIdx - 1 + testimonials.length) % testimonials.length)}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/80 transition-colors hidden sm:flex"
-              aria-label="Previous testimonial"
-            >
-              <ChevronLeft className="w-5 h-5 text-charcoal" />
-            </button>
-            <button
-              onClick={() => setTestimonialIdx((testimonialIdx + 1) % testimonials.length)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/80 transition-colors hidden sm:flex"
-              aria-label="Next testimonial"
-            >
-              <ChevronRight className="w-5 h-5 text-charcoal" />
-            </button>
-          </div>
+              key={index}
+              onClick={() => setVoiceImgIdx(index)}
+              aria-label={`Show image ${index + 1}`}
+              className={`rounded-full transition-all duration-300 ${
+                voiceImgIdx === index
+                  ? "w-8 h-2 bg-navy"
+                  : "w-2 h-2 bg-navy/20 hover:bg-navy/40"
+              }`}
+            />
+          ))}
         </div>
-      </section>
+      </div>
+
+      {/* Previous button */}
+      <button
+        onClick={() =>
+          setVoiceImgIdx((voiceImgIdx - 1 + 3) % 3)
+        }
+        aria-label="Previous image"
+        className="absolute left-2 sm:left-0 top-1/2 -translate-y-1/2 sm:-translate-x-4 w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/80 transition-colors"
+      >
+        <ChevronLeft className="w-5 h-5 text-charcoal" />
+      </button>
+
+      {/* Next button */}
+      <button
+        onClick={() => setVoiceImgIdx((voiceImgIdx + 1) % 3)}
+        aria-label="Next image"
+        className="absolute right-2 sm:right-0 top-1/2 -translate-y-1/2 sm:translate-x-4 w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/80 transition-colors"
+      >
+        <ChevronRight className="w-5 h-5 text-charcoal" />
+      </button>
+    </div>
+  </div>
+</section>
 
       {/* ═══════════ CRIME HOTSPOT MAP ═══════════ */}
       <section ref={mapReveal.ref} className="py-16 lg:py-20 bg-white" id="crime-map">
