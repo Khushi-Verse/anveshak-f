@@ -907,10 +907,7 @@ const [voiceImgIdx, setVoiceImgIdx] = useState(0);
                 <a href="tel:1930" className="flex items-center justify-center gap-3 w-full py-3 bg-navy text-white rounded-xl font-bold hover:bg-navy-700 transition-colors shadow-md">
                   <span>Cyber Crime: Dial 1930</span>
                 </a>
-                <button className="flex items-center justify-center gap-3 w-full py-3 bg-green-50 text-green-700 rounded-xl font-bold hover:bg-green-100 transition-colors border border-green-200">
-                  <MessageSquare className="w-4 h-4" />
-                  <span>Chat with Anveshak Bot</span>
-                </button>
+                
               </div>
             </div>
           </div>
@@ -933,11 +930,7 @@ const [voiceImgIdx, setVoiceImgIdx] = useState(0);
                 }} />
               </div>
               <div className="relative">
-                <div className="flex gap-0 w-16 h-1 rounded-full overflow-hidden mx-auto mb-6">
-                  <div className="flex-1 bg-saffron" />
-                  <div className="flex-1 bg-white" />
-                  <div className="flex-1 bg-forest" />
-                </div>
+                
                 <h2 className="text-3xl sm:text-4xl font-bold mb-4">
                   Ready to Access <span className="font-serif italic text-purple-600">Digital Justice</span>?
                 </h2>
@@ -946,7 +939,7 @@ const [voiceImgIdx, setVoiceImgIdx] = useState(0);
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 
-                  <Link to="/login" className="pill-btn border-2 border-white/20 text-white hover:bg-white/10 font-semibold px-8 py-3.5">
+                  <Link to="/login" className="pill-btn border-2 border-[#7c3aed] bg-white text-black hover:bg-white/90 font-semibold px-8 py-3.5">
                     Login to Dashboard
                   </Link>
                 </div>
