@@ -291,13 +291,20 @@ export default function Landing() {
               {/* Badge */}
               
 
-              <h1 className="text-3xl sm:text-4xl lg:text-[2.85rem] font-bold text-charcoal leading-[1.15] tracking-tight mb-2 drop-shadow-sm animate-popup">
-                <span className="font-serif italic text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-amber-600">अन्वेषक</span>
-                <br />
-                <span className="text-2xl sm:text-3xl lg:text-[2.25rem] font-semibold animate-text-gradient bg-gradient-to-r from-emerald-800 via-teal-700 to-amber-600 bg-clip-text text-transparent inline-block pb-0.5">
-                  {t('hero.title')}
-                </span>
-              </h1>
+             <h1 className="text-3xl sm:text-4xl lg:text-[2.85rem] font-bold text-charcoal leading-[1.1] tracking-tight mb-2 drop-shadow-sm animate-popup">
+  {/* English name */}
+ <span className="block text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tracking-[0.12em] text-orange-500 uppercase mb-2">
+  ANVESHAK
+</span>
+  {/* Hindi name — Indian flag green */}
+  <span className="block font-serif italic text-[#138808]">
+    अन्वेषक
+  </span>
+
+  <span className="text-2xl sm:text-3xl lg:text-[2.25rem] font-semibold animate-text-gradient bg-gradient-to-r from-emerald-800 via-teal-700 to-amber-600 bg-clip-text text-transparent inline-block pb-0.5">
+    {t('hero.title')}
+  </span>
+</h1>
 
               <p className="text-sm sm:text-base text-charcoal-muted leading-relaxed mb-2 max-w-lg font-medium">
                 {t('hero.subtitle')}
