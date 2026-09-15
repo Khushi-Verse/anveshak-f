@@ -104,7 +104,7 @@ export const HeroGateway = ({
   };
 
   return (
-    <main className="relative z-10 flex-1 w-full h-full min-h-0 flex flex-col items-center justify-center px-4 sm:px-6 pt-3 sm:pt-4 pb-2 sm:pb-3 text-center overflow-hidden scale-125 sm:scale-150 md:scale-[1.75] lg:scale-[2] origin-center">
+   <main className="relative z-10 flex-1 w-full h-full min-h-0 flex flex-col items-center justify-center px-4 sm:px-6 pt-3 sm:pt-4 pb-2 sm:pb-3 text-center overflow-hidden">
       <div className="max-w-2xl w-full flex flex-col items-center justify-center">
         {/* Step 1: LOGO APPEARS FIRST! Exactly matching provided sovereign shield emblem with dedicated breathing room */}
         <div
