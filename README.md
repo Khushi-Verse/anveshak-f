@@ -12,7 +12,7 @@
   </p>
 
   <p>
-    <a href="https://your-anveshak-demo.vercel.app">
+    <a href="https://anveshak-885p245yf-khushi-singh-collabs-projects.vercel.app/">
       <img src="https://img.shields.io/badge/Live%20Demo-Visit%20Website-ff9933?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo"/>
     </a>
     <a href="https://github.com/Khushi-Verse/Anveshak-new">
