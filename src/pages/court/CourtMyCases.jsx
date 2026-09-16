@@ -11,39 +11,6 @@ const statusColor = {
   'Active': 'bg-blue-100 text-blue-700',
 };
 
-// Fallback mock data if mockCourtCases is empty
-const fallbackCases = [
-  {
-    id: 'ANV-2026-0342',
-    caseId: 'ANV-2026-0342',
-    title: 'State vs. Rohit Mehra & Anr.',
-    status: 'Hearing',
-    type: 'Criminal',
-    date: 'Sept 8, 2026',
-    location: 'District Court, Delhi',
-    nextHearing: 'Sept 15, 2026',
-  },
-  {
-    id: 'ANV-2026-0298',
-    caseId: 'ANV-2026-0298',
-    title: 'State vs. Cyber Fraud Syndicate',
-    status: 'Pending',
-    type: 'Cybercrime',
-    date: 'Aug 20, 2026',
-    location: 'District Court, Delhi',
-    nextHearing: 'Sept 18, 2026',
-  },
-  {
-    id: 'ANV-2026-0215',
-    caseId: 'ANV-2026-0215',
-    title: 'State vs. Narcotics Traffickers',
-    status: 'Disposed',
-    type: 'NDPS',
-    date: 'July 10, 2026',
-    location: 'District Court, Delhi',
-    nextHearing: null,
-  },
-];
 
 export default function CourtMyCases() {
   const [search, setSearch] = useState('');
@@ -62,15 +29,15 @@ export default function CourtMyCases() {
         });
         const data = await res.json();
         if(res.ok) {
-           const mapped = data.cases.filter(c => c.status === 'COURT_PROCEEDINGS' || c.status === 'CHARGESHEET').map(c => ({
+           const mapped = data.cases.filter(c => c.status === 'COURT_PROCEEDINGS' || c.status === 'CHARGE_SHEET' || c.status === 'DISPOSED').map(c => ({
              id: c.caseId || c._id,
              title: c.firId ? `${c.firId.category} Case` : 'Case File',
-             status: 'Hearing Scheduled',
+             status: c.status === 'DISPOSED' ? 'Disposed' : (c.status === 'CHARGE_SHEET' ? 'Pending' : 'Hearing'),
              hearingDate: 'Upcoming',
              priority: c.priority || 'Medium',
              nextAction: 'Review Evidence'
            }));
-           setCases(mapped.length > 0 ? mapped : fallbackCases);
+           setCases(mapped);
         }
       } catch(e) { console.error(e); } finally { setIsLoading(false); }
     };

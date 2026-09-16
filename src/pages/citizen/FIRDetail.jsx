@@ -4,7 +4,7 @@ import CaseTimeline from '../../components/shared/CaseTimeline';
 import { formatDate } from '../../utils/helpers';
 import { 
   ArrowLeft, Download, MapPin, Calendar, User, 
-  FileText, ShieldCheck, AlertCircle, Loader2, CheckCircle2
+  FileText, ShieldCheck, AlertCircle, Loader2, CheckCircle2, Scale
 } from 'lucide-react';
 
 export default function FIRDetail() {
@@ -81,6 +81,13 @@ export default function FIRDetail() {
                    }));
                    stepIdx = stages.length - 1;
                  }
+               }
+               // Also set next hearing if available
+               if (matchedCase.nextHearingDate) {
+                 setFir(prev => ({
+                   ...prev,
+                   nextHearing: new Date(matchedCase.nextHearingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                 }));
                }
             }
           }
@@ -228,6 +235,18 @@ export default function FIRDetail() {
                 <div className="w-full bg-indigo-50 rounded-full h-2 mt-4 overflow-hidden relative z-10">
                   <div className="bg-indigo-500 h-2 rounded-full transition-all duration-1000 ease-out" style={{ width: `${Math.round(((currentStepIndex + 1) / timelineStages.length) * 100)}%` }}></div>
                 </div>
+
+                {fir.nextHearing && (
+                  <div className="mt-4 p-3 bg-purple-50 rounded-xl border border-purple-100 flex items-center justify-between text-left relative z-10">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider font-bold text-purple-800">Next Hearing</p>
+                      <p className="text-sm font-semibold text-purple-900 mt-0.5 flex items-center gap-1"><Calendar size={14} /> {fir.nextHearing}</p>
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-purple-200 flex items-center justify-center">
+                      <Scale size={14} className="text-purple-700" />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="relative">

@@ -4,9 +4,13 @@ import { useAuth } from '../../contexts/AuthContext';
 import { mockCourtCases } from '../../data/mockData';
 import CaseTimeline from '../../components/shared/CaseTimeline';
 import SignatureVerification from '../../components/shared/SignatureVerification';
+import FormalCaseChat from '../../components/shared/FormalCaseChat';
+import AuditTrail from '../../components/shared/AuditTrail';
+import HashVerificationModal from '../../components/shared/HashVerificationModal';
 import {
   ArrowLeft, Download, Clock, MapPin, FileText,
-  CheckCircle, Plus, Scale, X, UploadCloud, AlertCircle, FileDown, Activity, Upload
+  CheckCircle, Plus, Scale, X, UploadCloud, AlertCircle, FileDown, Activity, Upload,
+  FileCheck, Link as LinkIcon
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
@@ -35,6 +39,8 @@ export default function CourtCaseDetail() {
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showJudgmentModal, setShowJudgmentModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [showAuditModal, setShowAuditModal] = useState(false);
+  const [verifyingEvidence, setVerifyingEvidence] = useState(null);
 
   // Case status
   const [caseStatus, setCaseStatus] = useState('Hearing');
@@ -53,40 +59,166 @@ export default function CourtCaseDetail() {
   const [docFile, setDocFile] = useState(null);
   const [docType, setDocType] = useState('Court Order');
 
-  // Court proceedings orders list
-  const [orders, setOrders] = useState([
-    {
-      hearingDate: '2026-09-10',
-      note: 'First hearing completed. Bail application reviewed; defense presented preliminary arguments. IO directed to submit additional forensic evidence by next hearing.',
-      nextHearingDate: '2026-09-15',
-      pdfName: 'Interim_Order_Sept10.pdf',
-      signedBy: 'Hon. Justice Meera Desai',
-      signedAt: 'Sept 10, 2026',
-    },
-  ]);
-
-  // Find case from mock data or fallback
-  const caseData = mockCourtCases?.find(c => c.id === id || c.caseId === id) || {
+  const [orders, setOrders] = useState([]);
+  const [caseData, setCaseData] = useState({
     id: id,
-    caseId: id || 'ANV-2026-0342',
-    title: 'State vs. Rohit Mehra & Anr.',
+    caseId: id,
+    title: 'Loading Case...',
     status: 'Hearing',
     priority: 'Normal',
-    type: 'Criminal',
-    date: 'Sept 8, 2026',
-    location: 'District Court, Delhi',
-    description: 'Assault and wrongful restraint under IPC Sec 323, 341. Charge sheet filed by IO Inspector Sharma.',
-  };
+    type: 'N/A',
+    date: 'N/A',
+    location: 'N/A',
+    description: 'Loading details from real database...',
+  });
 
-  const judgeName = user?.name ? `Hon. Justice ${user.name}` : 'Hon. Justice Meera Desai';
+  const judgeName = user?.name ? `Hon. Justice ${user.name}` : 'Hon. Justice';
+  const [documents, setDocuments] = useState([]);
 
-  // Inline documents state
-  const [documents, setDocuments] = useState(caseData.evidence || [
-    { id: 1, filename: 'Charge_Sheet_Final.pdf',  type: 'Charge Sheet', uploadedBy: 'IO Inspector Sharma', date: '2026-09-07', size: '2.4 MB' },
-    { id: 2, filename: 'Forensic_Report_FSL.pdf', type: 'Forensic',     uploadedBy: 'Dr. Gupta (FSL)',      date: '2026-09-05', size: '1.1 MB' },
-    { id: 3, filename: 'Medical_Report.pdf',      type: 'Medical',      uploadedBy: 'City Hospital',        date: '2026-09-04', size: '850 KB' },
-    { id: 4, filename: 'Witness_Statements.pdf',  type: 'Statement',    uploadedBy: 'IO Inspector Sharma',  date: '2026-09-03', size: '3.2 MB' },
-  ]);
+  React.useEffect(() => {
+    const fetchCaseDetails = async () => {
+      try {
+        const token = localStorage.getItem('anveshak_token');
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+        
+        // Fetch case
+        const caseRes = await fetch(`${API_URL}/api/case/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (caseRes.ok) {
+          const data = await caseRes.json();
+          const c = data.case;
+          // Fetch timeline
+          let timelineData = []; 
+          try {
+             const tRes = await fetch(`${API_URL}/api/case/${id}/timeline`, { headers: { Authorization: `Bearer ${token}` } });
+             if (tRes.ok) {
+                const tData = await tRes.json();
+                if (tData.timeline && tData.timeline.length > 0) {
+                   timelineData = tData.timeline.map(t => ({
+                     event: t.action ? t.action.replace(/_/g, ' ') : (t.status || 'Update'),
+                     date: new Date(t.createdAt).toLocaleDateString(),
+                     by: t.performedBy ? (t.performedBy.name || t.performedBy) : 'System',
+                     description: t.description || ''
+                   }));
+                }
+             }
+          } catch (e) {
+             console.error("Error fetching timeline", e);
+          }
+
+          // Compute statusStep
+          const statusMap = {
+            'FIR_REGISTERED': 1,
+            'ASSIGNED': 2,
+            'INVESTIGATION_ONGOING': 3,
+            'EVIDENCE_COLLECTED': 4,
+            'FORENSIC_REPORT': 5,
+            'CHARGE_SHEET': 6,
+            'COURT_PROCEEDINGS': 7,
+            'DISPOSED': 9
+          };
+          const statusStep = statusMap[c.status] || 7;
+
+          // Fetch audit
+          let auditData = [];
+          try {
+             const aRes = await fetch(`${API_URL}/api/case/${id}/audit`, { headers: { Authorization: `Bearer ${token}` } });
+             if (aRes.ok) {
+                const aData = await aRes.json();
+                if (aData.auditLogs || aData.length > 0) {
+                   const logs = aData.auditLogs || aData;
+                   auditData = logs.map(log => ({
+                     id: log._id,
+                     timestamp: new Date(log.createdAt).toLocaleString(),
+                     by: log.userId ? (log.userId.name || log.userId) : 'System',
+                     action: log.action ? log.action.replace(/_/g, ' ') : 'Action',
+                     details: log.description || log.details
+                   }));
+                }
+             }
+          } catch(e) {}
+
+          setCaseData({
+            id: c.caseId || c._id,
+            caseId: c.caseId || c._id,
+            title: c.firId ? `${c.firId.category || 'Incident'} — ${c.firId.incidentLocation || 'Unknown'}` : 'Case File',
+            status: c.status || 'COURT_PROCEEDINGS',
+            priority: c.priority || 'MEDIUM',
+            type: c.firId?.category || 'General',
+            date: new Date(c.createdAt).toLocaleDateString(),
+            location: c.jurisdiction || c.firId?.incidentLocation || 'District Court',
+            description: c.firId?.incidentDescription || 'No description',
+            timeline: timelineData.length > 0 ? timelineData : null,
+            statusStep: statusStep,
+            auditLog: auditData,
+            evidence: c.evidence || []
+          });
+          setCaseStatus(c.status === 'DISPOSED' ? 'Disposed' : 'Hearing');
+          
+          if (c.courtProceedings) {
+             const mappedOrders = c.courtProceedings.map(o => ({
+                hearingDate: new Date(o.hearingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                note: o.note,
+                nextHearingDate: o.nextHearingDate ? new Date(o.nextHearingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD',
+                pdfName: o.documentId ? 'Court_Order.pdf' : null,
+                signedBy: o.signedBy || 'Hon. Judge',
+                signedAt: new Date(o.signedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+             }));
+             setOrders(mappedOrders);
+          }
+
+          // Fetch documents
+          let docs = [];
+          
+          // Evidence from case
+          if (c.evidence) {
+             docs = c.evidence.map(e => ({
+                id: e.evidenceId || e._id,
+                filename: e.fileName || e.filename || 'Evidence',
+                type: 'Evidence',
+                uploadedBy: e.uploadedBy ? (e.uploadedBy.name || e.uploadedBy) : 'System',
+                date: new Date(e.createdAt || Date.now()).toISOString().split('T')[0],
+                size: 'Unknown',
+                blockchainTxHash: e.blockchainTxHash,
+                fileHash: e.fileHash,
+                verificationStatus: e.verificationStatus,
+                verified: e.verificationStatus === 'VERIFIED'
+             }));
+          }
+
+          try {
+             const docRes = await fetch(`${API_URL}/api/court/case/${c.caseId || c._id}/documents`, {
+                headers: { Authorization: `Bearer ${token}` }
+             });
+             if (docRes.ok) {
+                const courtDocs = await docRes.json();
+                const mappedCourtDocs = courtDocs.map(d => ({
+                  id: d._id,
+                  filename: d.filename,
+                  type: d.type,
+                  uploadedBy: d.uploadedBy ? (d.uploadedBy.name || d.uploadedBy) : 'Court',
+                  date: new Date(d.createdAt).toISOString().split('T')[0],
+                  size: d.size ? `${(d.size / (1024 * 1024)).toFixed(2)} MB` : 'Unknown',
+                  verified: d.digitalSignature?.verified,
+                  blockchainTxHash: d.blockchainTxHash,
+                  fileHash: d.digitalSignature?.documentHash || d.fileHash
+                }));
+                docs = [...docs, ...mappedCourtDocs];
+             }
+          } catch (e) {
+             console.error("Error fetching court documents", e);
+          }
+          setDocuments(docs);
+        }
+      } catch (error) {
+        console.error("Error fetching case details:", error);
+      }
+    };
+
+    fetchCaseDetails();
+  }, [id]);
 
   /* ─── Step 1: Trigger Signature Verification ─── */
   const triggerSignatureFlow = (type) => {
@@ -112,7 +244,7 @@ export default function CourtCaseDetail() {
   /* ─── Form Submissions ─── */
   const handleAddOrderSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token') || '';
+    const token = localStorage.getItem('anveshak_token') || '';
     const caseId = caseData.caseId || id;
 
     const formData = new FormData();
@@ -175,7 +307,7 @@ export default function CourtCaseDetail() {
 
   const handleUploadJudgmentSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token') || '';
+    const token = localStorage.getItem('anveshak_token') || '';
     const currentCaseId = caseData.caseId || id;
 
     const formData = new FormData();
@@ -226,7 +358,7 @@ export default function CourtCaseDetail() {
   const handleUploadDocumentSubmit = async (e) => {
     e.preventDefault();
     if (!docFile) return;
-    const token = localStorage.getItem('token') || '';
+    const token = localStorage.getItem('anveshak_token') || '';
     const currentCaseId = caseData.caseId || id;
 
     const formData = new FormData();
@@ -342,7 +474,11 @@ export default function CourtCaseDetail() {
                 <Activity className="w-5 h-5 mr-2" /> Pre-Trial Timeline
               </h2>
               <div className="pointer-events-none opacity-90">
-                <CaseTimeline stages={caseTimelineStages} currentStep={7} totalStages={7} />
+                <CaseTimeline 
+                  stages={caseData.timeline || caseTimelineStages} 
+                  currentStep={caseData.statusStep || 7} 
+                  totalStages={9} 
+                />
               </div>
             </div>
 
@@ -418,50 +554,138 @@ export default function CourtCaseDetail() {
                 </div>
               )}
             </div>
-          </div>
 
-          {/* RIGHT: Inline Documents */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sticky top-24">
-              <div className="flex items-center justify-between mb-2">
+            {/* Evidence & Documents */}
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+              <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-bold text-[#0B3D91] flex items-center">
-                  <FileText className="w-5 h-5 mr-2" /> Case Documents
+                  <FileCheck className="w-5 h-5 mr-2" /> Evidence & Documents
                 </h2>
-                <button
+                <button 
                   onClick={() => triggerSignatureFlow('document')}
-                  className="text-xs px-2.5 py-1 bg-[#0B3D91]/10 text-[#0B3D91] hover:bg-[#0B3D91]/20 rounded-md font-semibold transition-colors flex items-center gap-1"
+                  className="text-xs px-3 py-1.5 bg-[#0B3D91]/10 text-[#0B3D91] hover:bg-[#0B3D91]/20 rounded-md font-semibold transition-colors flex items-center gap-1"
                 >
-                  <Upload className="w-3.5 h-3.5" /> Upload
+                  <Upload className="w-3.5 h-3.5 mr-1" /> Add New
                 </button>
               </div>
-              <p className="text-xs text-[#1A1A1A]/60 mb-4">Verified documents from IO, forensics, and court records.</p>
-
-              <div className="space-y-3">
-                {documents.map((doc) => (
-                  <div key={doc.id} className="p-3 bg-[#FAF8F5] rounded-lg border border-gray-100 hover:border-[#0B3D91]/30 transition-colors group">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-3 min-w-0">
-                        <div className="bg-white p-1.5 rounded shadow-sm shrink-0">
-                          <FileText className="w-5 h-5 text-purple-600" />
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="text-sm font-semibold text-[#1A1A1A] truncate" title={doc.filename}>
-                            {doc.filename}
-                          </h4>
-                          <p className="text-[10px] text-[#1A1A1A]/60 mt-0.5">{doc.uploadedBy} · {doc.date}</p>
-                          <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded mt-1 inline-block">
-                            {doc.type}
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="text-xs text-gray-500 uppercase bg-gray-50/50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">Filename</th>
+                      <th className="px-4 py-3 font-medium">File Hash (SHA-256)</th>
+                      <th className="px-4 py-3 font-medium">Type</th>
+                      <th className="px-4 py-3 font-medium">Uploaded By</th>
+                      <th className="px-4 py-3 font-medium">Status</th>
+                      <th className="px-4 py-3 font-medium">Blockchain</th>
+                      <th className="px-4 py-3 font-medium text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {documents.map((item) => (
+                      <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                        <td className="px-4 py-3 font-medium text-gray-800 flex items-center">
+                          <FileText className="w-4 h-4 mr-2 text-purple-600" />
+                          <span className="truncate max-w-[150px]" title={item.filename}>{item.filename}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="font-mono text-[10px] text-gray-500 truncate block max-w-[120px]" title={item.fileHash}>{item.fileHash || 'N/A'}</span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-600">
+                          <span className="px-2 py-1 bg-gray-100 rounded text-[10px]">{item.type}</span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 text-xs truncate max-w-[120px]">
+                          {item.uploadedBy}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 rounded text-[10px] font-medium ${
+                            item.verified ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                          }`}>
+                            {item.verified ? 'VERIFIED' : 'PENDING'}
                           </span>
-                        </div>
-                      </div>
-                      <button className="text-[#0B3D91] p-1.5 hover:bg-[#0B3D91]/10 rounded transition-colors opacity-0 group-hover:opacity-100 shrink-0 ml-2" title="Download">
-                        <FileDown className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                        </td>
+                        <td className="px-4 py-3 text-xs font-mono">
+                          {item.blockchainTxHash ? (
+                            <a href={`https://sepolia.etherscan.io/tx/${item.blockchainTxHash}`} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline flex items-center">
+                              <LinkIcon className="w-3 h-3 mr-1" />
+                              {item.blockchainTxHash.substring(0, 8)}...
+                            </a>
+                          ) : (
+                            <span className="text-gray-400">Not Anchored</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right flex justify-end items-center space-x-2">
+                          <button 
+                            onClick={() => setVerifyingEvidence(item)}
+                            className="px-2 py-1 bg-[#0B3D91]/10 text-[#0B3D91] hover:bg-[#0B3D91]/20 rounded transition-colors text-xs font-semibold whitespace-nowrap"
+                          >
+                            Verify Hash
+                          </button>
+                          <button className="p-1.5 text-purple-600 hover:bg-purple-100 rounded transition-colors inline-block" title="Download">
+                            <Download className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {documents.length === 0 && (
+                  <p className="text-center text-gray-500 py-6">No evidence or documents attached yet.</p>
+                )}
               </div>
             </div>
+
+            {/* Formal Case Chat */}
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+              <FormalCaseChat 
+                caseId={caseData.caseId || caseData.id} 
+                caseName={caseData.title} 
+                currentStage={caseData.status} 
+              />
+            </div>
+
+          </div>
+
+          {/* RIGHT COLUMN */}
+          <div className="space-y-6">
+            
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+              <h3 className="text-lg font-bold text-[#0B3D91] mb-4 flex items-center">
+                <Activity className="w-5 h-5 mr-2" /> Case Audit Log
+              </h3>
+              
+              <div className="space-y-4 relative before:absolute before:inset-0 before:ml-2 before:-translate-x-px md:before:ml-2.5 md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-200 before:to-transparent max-h-[600px] overflow-y-auto pr-2">
+                {caseData.auditLog && caseData.auditLog.length > 0 ? caseData.auditLog.map((log) => (
+                  <div key={log.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                    <div className="flex items-center justify-center w-5 h-5 rounded-full border border-white bg-gray-200 text-gray-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                      <div className="w-1.5 h-1.5 bg-gray-500 rounded-full"></div>
+                    </div>
+                    <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] p-3 rounded border border-gray-100 bg-[#FAF8F5] shadow-sm">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold text-gray-800 text-xs">{log.action}</span>
+                      </div>
+                      <div className="text-xs text-gray-600 mb-1 leading-relaxed">
+                        {log.details}
+                      </div>
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100/50">
+                        <span className="text-[10px] text-gray-500 font-medium bg-white px-2 py-0.5 rounded border border-gray-100">{log.by}</span>
+                        <time className="text-[10px] text-gray-400 font-mono flex items-center"><Clock className="w-3 h-3 mr-1" />{log.timestamp}</time>
+                      </div>
+                    </div>
+                  </div>
+                )) : (
+                  <p className="text-sm text-gray-500">No audit logs available.</p>
+                )}
+              </div>
+              <button 
+                onClick={() => setShowAuditModal(true)}
+                className="w-full mt-4 py-2 bg-gray-50 hover:bg-gray-100 text-[#0B3D91] text-sm font-semibold rounded-lg transition-colors border border-gray-200 shadow-sm"
+              >
+                View Full Audit Trail
+              </button>
+            </div>
+            
           </div>
         </div>
       </div>
@@ -788,6 +1012,22 @@ export default function CourtCaseDetail() {
         </div>
       )}
 
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {/* ── STEP 5: Audit Trail Modal ──────────── */}
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {showAuditModal && (
+        <AuditTrail 
+          logs={caseData.auditLog} 
+          onClose={() => setShowAuditModal(false)} 
+        />
+      )}
+
+      <HashVerificationModal 
+        isOpen={!!verifyingEvidence} 
+        onClose={() => setVerifyingEvidence(null)} 
+        evidence={verifyingEvidence}
+        caseId={caseData?.caseId || caseData?.id}
+      />
     </div>
   );
 }

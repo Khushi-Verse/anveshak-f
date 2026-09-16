@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Link } from 'react-router-dom';
 import Breadcrumb from '../../components/layout/Breadcrumb';
@@ -37,7 +37,7 @@ const ViewFIRs = () => {
         const fList = data.firs || [];
         
         if (fList.length > 0) {
-          const mappedFIRs = fList.map(f => ({
+          let mappedFIRs = fList.map(f => ({
             id: f._id,
             trackingId: f.firNumber,
             title: `${f.category || 'General'} Incident`,
@@ -46,8 +46,25 @@ const ViewFIRs = () => {
             location: f.incidentLocation || 'Unknown',
             description: f.incidentDescription || '',
             lastUpdated: f.updatedAt,
-            timeline: [] // Usually derived from backend timeline route, but we keep it empty or mock here if not present in /my
+            timeline: [], // Usually derived from backend timeline route, but we keep it empty or mock here if not present in /my
+            nextHearing: null
           }));
+
+          try {
+            const caseRes = await fetch(`${API_URL}/case`, { headers: { Authorization: `Bearer ${token}` } });
+            if (caseRes.ok) {
+              const caseData = await caseRes.json();
+              const cases = caseData.cases || caseData;
+              mappedFIRs = mappedFIRs.map(fir => {
+                const matchedCase = cases.find(c => c.firId && (c.firId._id === fir.id || c.firId === fir.id));
+                if (matchedCase && matchedCase.nextHearingDate) {
+                  return { ...fir, nextHearing: new Date(matchedCase.nextHearingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) };
+                }
+                return fir;
+              });
+            }
+          } catch(e) {}
+
           setAllFIRs(mappedFIRs);
         } else {
           setAllFIRs([]);
@@ -187,6 +204,11 @@ const ViewFIRs = () => {
                           <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-md flex items-center gap-1">
                             <Clock size={12} /> Last updated: {formatRelativeTime(fir.lastUpdated)}
                           </span>
+                          {fir.nextHearing && (
+                            <span className="text-xs font-semibold text-purple-700 bg-purple-50 px-2 py-1 rounded-md border border-purple-100 flex items-center gap-1">
+                              <Calendar size={12} /> Next Hearing: {fir.nextHearing}
+                            </span>
+                          )}
                         </div>
                         
                         <div>

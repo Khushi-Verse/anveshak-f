@@ -31,8 +31,8 @@ export default function Sidebar({ isOpen, onClose }) {
     { to: '/court/alerts', icon: MessageSquare, label: t('court.alertSettings') || 'Alert Settings' },
   ];
 
-  const links = user?.role === 'court' ? courtLinks : officerLinks;
-  const basePath = user?.role === 'court' ? '/court' : '/officer';
+  const links = user?.role?.toUpperCase() === 'COURT' ? courtLinks : officerLinks;
+  const basePath = user?.role?.toUpperCase() === 'COURT' ? '/court' : '/officer';
 
   return (
     <>

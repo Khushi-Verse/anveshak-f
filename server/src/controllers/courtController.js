@@ -6,6 +6,7 @@ const AuditLog = require("../models/AuditLog");
 const { createNotification } = require("./notificationController");
 const crypto = require("crypto");
 const fs = require("fs");
+const { anchorEvidence } = require("../blockchain/evidenceRegistry");
 
 // --- Helper to save Document to DB ---
 const saveDocument = async (req, caseId, type, signatureData) => {
@@ -56,6 +57,25 @@ const saveDocument = async (req, caseId, type, signatureData) => {
 
   await doc.save();
   
+  if (sigData.method !== "none") {
+    try {
+      const blockchainResult = await anchorEvidence(
+        doc._id.toString(),
+        documentHash
+      );
+
+      doc.blockchainStatus = "ANCHORED";
+      doc.blockchainTxHash = blockchainResult.transactionHash;
+      doc.blockchainAnchoredHash = documentHash;
+      doc.blockchainAnchoredAt = new Date();
+
+      await doc.save();
+    } catch (err) {
+      doc.blockchainStatus = "FAILED";
+      await doc.save();
+    }
+  }
+  
   // Hash-Secured Audit Log for Uploads
   await AuditLog.create({
     caseId,
@@ -97,6 +117,10 @@ exports.addHearingOrder = async (req, res) => {
     // 2. Update Case
     const caseRecord = await Case.findOne({ caseId: caseIdStr });
     if (!caseRecord) return res.status(404).json({ message: "Case not found" });
+
+    if (!caseRecord.courtProceedings) {
+      caseRecord.courtProceedings = [];
+    }
 
     const newOrder = {
       hearingDate,

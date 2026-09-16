@@ -10,12 +10,43 @@ const CourtDashboard = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
 
-  // "Today's Cause List" filtering logic (simulated for today)
-  const [todaysCauseList] = useState([
-    { id: 'ANV-2026-0342', title: 'State vs. Rohit Mehra & Anr.', hearingDate: 'Sept 10, 2026', time: '10:30 AM', category: 'Hearing' },
-    { id: 'ANV-2026-0298', title: 'State vs. Cyber Fraud Syndicate', hearingDate: 'Sept 10, 2026', time: '11:00 AM', category: 'Arguments' },
-    { id: 'ANV-2026-1045', title: 'State vs. Rahul Verma', hearingDate: 'Sept 10, 2026', time: '02:00 PM', category: 'Judgment' }
-  ]);
+  const [todaysCauseList, setTodaysCauseList] = useState([]);
+  const [stats, setStats] = useState({ docket: 0, hearings: 0, pending: 0, disposed: 0 });
+
+  React.useEffect(() => {
+    const fetchCases = async () => {
+      try {
+        const token = localStorage.getItem('anveshak_token');
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+        const res = await fetch(`${API_URL}/case`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if(res.ok) {
+          const data = await res.json();
+          const courtCases = data.cases.filter(c => c.status === 'COURT_PROCEEDINGS' || c.status === 'CHARGE_SHEET' || c.status === 'DISPOSED');
+          
+          setStats({
+            docket: courtCases.filter(c => c.status !== 'DISPOSED').length,
+            hearings: courtCases.filter(c => c.nextHearingDate).length,
+            pending: courtCases.filter(c => c.status === 'COURT_PROCEEDINGS' || c.status === 'CHARGE_SHEET').length,
+            disposed: courtCases.filter(c => c.status === 'DISPOSED').length,
+          });
+
+          const activeHearings = courtCases
+            .filter(c => c.status !== 'DISPOSED')
+            .map(c => ({
+              id: c.caseId || c._id,
+              title: c.firId ? `${c.firId.category || 'General'} Case` : 'Case File',
+              hearingDate: c.nextHearingDate || new Date().toISOString().split('T')[0],
+              time: 'TBD',
+              category: 'Hearing'
+            }));
+          setTodaysCauseList(activeHearings);
+        }
+      } catch(e) { console.error("Error fetching cases:", e); }
+    };
+    fetchCases();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -32,7 +63,7 @@ const CourtDashboard = () => {
         </div>
         <div className="hidden sm:block text-right">
           <p className="text-sm text-[#1A1A1A]/60">Current Date</p>
-          <p className="font-semibold text-[#1A1A1A]">Sept 10, 2026</p>
+          <p className="font-semibold text-[#1A1A1A]">{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
         </div>
       </div>
 
@@ -41,7 +72,7 @@ const CourtDashboard = () => {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm font-medium text-[#1A1A1A]/60">Cases on Docket</p>
-              <h3 className="text-2xl font-bold text-[#0B3D91] mt-1">12</h3>
+              <h3 className="text-2xl font-bold text-[#0B3D91] mt-1">{stats.docket}</h3>
             </div>
             <div className="bg-[#0B3D91]/10 p-2 rounded-lg text-[#0B3D91]">
               <Scale size={20} />
@@ -52,7 +83,7 @@ const CourtDashboard = () => {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm font-medium text-[#1A1A1A]/60">Today's Hearings</p>
-              <h3 className="text-xl font-bold text-purple-600 mt-1">3</h3>
+              <h3 className="text-xl font-bold text-purple-600 mt-1">{stats.hearings}</h3>
             </div>
             <div className="bg-purple-100 p-2 rounded-lg text-purple-600">
               <Calendar size={20} />
@@ -63,7 +94,7 @@ const CourtDashboard = () => {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm font-medium text-[#1A1A1A]/60">Pending Orders</p>
-              <h3 className="text-2xl font-bold text-red-500 mt-1">2</h3>
+              <h3 className="text-2xl font-bold text-red-500 mt-1">{stats.pending}</h3>
             </div>
             <div className="bg-red-50 p-2 rounded-lg text-red-500">
               <AlertCircle size={20} />
@@ -73,8 +104,8 @@ const CourtDashboard = () => {
         <div className="bg-white p-5 rounded-xl shadow-sm border-l-4 border-green-600 hover:-translate-y-1 transition-all duration-300">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm font-medium text-[#1A1A1A]/60">Disposed (Month)</p>
-              <h3 className="text-2xl font-bold text-green-600 mt-1">8</h3>
+              <p className="text-sm font-medium text-[#1A1A1A]/60">Disposed (Total)</p>
+              <h3 className="text-2xl font-bold text-green-600 mt-1">{stats.disposed}</h3>
             </div>
             <div className="bg-green-50 p-2 rounded-lg text-green-600">
               <FileText size={20} />

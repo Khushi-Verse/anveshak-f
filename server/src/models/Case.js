@@ -29,6 +29,7 @@ const caseSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: [
+        "CREATED",
         "FIR_REGISTERED",
         "UNDER_REVIEW",
         "ASSIGNED",
@@ -38,52 +39,30 @@ const caseSchema = new mongoose.Schema(
         "CHARGE_SHEET",
         "COURT_PROCEEDINGS",
         "RESOLVED",
+        "DISPOSED",
       ],
       default: "FIR_REGISTERED",
     },
 
     priority: {
       type: String,
-      enum: ["LOW", "MEDIUM", "HIGH"],
+      enum: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
       default: "MEDIUM",
     },
 
     aiAnalysis: {
-      classification: {
-        type: String,
-        default: null,
-      },
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
 
-      confidence: {
-        type: Number,
-        default: null,
-      },
+    courtProceedings: {
+      type: Array,
+      default: [],
+    },
 
-      summary: {
-        type: String,
-        default: null,
-      },
-
-      severity: {
-        type: String,
-        enum: ["LOW", "MEDIUM", "HIGH"],
-        default: null,
-      },
-
-      reasoning: {
-        type: String,
-        default: null,
-      },
-
-      keywords: {
-        type: [String],
-        default: [],
-      },
-
-      aiAvailable: {
-        type: Boolean,
-        default: false,
-      },
+    nextHearingDate: {
+      type: Date,
+      default: null,
     },
 
     jurisdiction: {

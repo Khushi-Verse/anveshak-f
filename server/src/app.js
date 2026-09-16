@@ -17,6 +17,7 @@ const evidenceRoutes = require("./routes/evidenceRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const signatureRoutes = require("./routes/signatureRoutes");
 const custodyRoutes = require("./routes/custodyRoutes");
+const courtRoutes = require("./routes/courtRoutes");
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use("/api/case", caseRoutes);
 app.use("/api/evidence", evidenceRoutes);
 app.use("/api/evidence", signatureRoutes);
 app.use("/api/evidence", custodyRoutes);
+app.use("/api/court", courtRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/v1/analytics", analyticsRoutes);

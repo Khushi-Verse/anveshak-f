@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -48,7 +48,7 @@ const CitizenDashboard = () => {
           { label: t('pendingAction') || 'Pending Action', value: pending, icon: <AlertCircle size={24} className="text-alert" />, bgColor: 'bg-red-50' },
         ]);
 
-        const mapped = fList.slice(0, 3).map(f => ({
+        let mapped = fList.slice(0, 3).map(f => ({
           id: f._id,
           trackingId: f.firNumber,
           title: `${f.category || 'Incident'} Report`,
@@ -56,6 +56,21 @@ const CitizenDashboard = () => {
           date: f.createdAt,
           location: f.incidentLocation
         }));
+
+        try {
+          const caseRes = await fetch(`${API_URL}/case`, { headers: { Authorization: `Bearer ${token}` } });
+          if(caseRes.ok) {
+            const caseData = await caseRes.json();
+            const cases = caseData.cases || caseData;
+            mapped = mapped.map(fir => {
+              const matchedCase = cases.find(c => c.firId && (c.firId._id === fir.id || c.firId === fir.id));
+              if (matchedCase && matchedCase.nextHearingDate) {
+                return { ...fir, nextHearing: new Date(matchedCase.nextHearingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) };
+              }
+              return fir;
+            });
+          }
+        } catch(e) {}
         
         setRealFIRs(mapped);
       } catch(e) {
@@ -118,6 +133,11 @@ const CitizenDashboard = () => {
                       </div>
                       <h3 className="font-bold text-charcoal">{fir.title}</h3>
                       <p className="text-sm text-gray-500 mt-1">{formatDate(fir.date)} • {fir.location}</p>
+                      {fir.nextHearing && (
+                        <p className="text-xs font-semibold text-purple-700 bg-purple-50 inline-flex items-center gap-1 px-2 py-1 rounded mt-2 border border-purple-100">
+                          <Clock size={12} /> Next Hearing: {fir.nextHearing}
+                        </p>
+                      )}
                     </div>
                     <Link to={`/citizen/fir/${fir.id}`} className="px-4 py-2 text-sm font-semibold text-navy bg-white border border-gray-200 rounded-lg hover:border-navy transition-colors self-start md:self-center">
                       View Details
