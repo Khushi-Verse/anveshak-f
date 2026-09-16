@@ -2,227 +2,310 @@
 
   <img src="./public/logo.jpg" alt="ANVESHAK Logo" width="180"/>
 
-  # ANVESHAK
-  ### National Justice Network
+  <h1>ANVESHAK</h1>
 
-  **Secure Digital Document Management System for Legal & Investigation Documents**
+  <h3>National Justice Network</h3>
 
-  <p>
-    <i>One Nation. One Justice Network.</i>
-  </p>
+  <p><strong>Secure Digital Document Management System for Legal & Investigation Documents</strong></p>
 
-  <p>
-    <a href="https://anveshak-885p245yf-khushi-singh-collabs-projects.vercel.app/">
-      <img src="https://img.shields.io/badge/Live%20Demo-Visit%20Website-ff9933?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo"/>
-    </a>
-    <a href="https://github.com/Khushi-Verse/Anveshak-new">
-      <img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github" alt="GitHub"/>
-    </a>
-  </p>
+  <p><em>One Nation. One Justice Network.</em></p>
 
-  <p>
-    <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black"/>
-    <img src="https://img.shields.io/badge/Node.js-Backend-339933?style=flat-square&logo=node.js&logoColor=white"/>
-    <img src="https://img.shields.io/badge/Express.js-API-000000?style=flat-square&logo=express"/>
-    <img src="https://img.shields.io/badge/MongoDB-Database-47A248?style=flat-square&logo=mongodb&logoColor=white"/>
-    <img src="https://img.shields.io/badge/Google%20Gemini-AI-4285F4?style=flat-square&logo=google"/>
-    <img src="https://img.shields.io/badge/Blockchain-Secured-8A2BE2?style=flat-square"/>
-  </p>
+  <br/>
+
+  <a href="https://anveshak-885p245yf-khushi-singh-collabs-projects.vercel.app/">
+    <img src="https://img.shields.io/badge/Live%20Demo-Visit%20ANVESHAK-ff9933?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo"/>
+  </a>
+  <a href="https://github.com/Khushi-Verse/Anveshak-new">
+    <img src="https://img.shields.io/badge/GitHub-Source%20Code-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Repository"/>
+  </a>
+
+<br/><br/>
+
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React"/>
+  <img src="https://img.shields.io/badge/Vite-Build%20Tool-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite"/>
+  <img src="https://img.shields.io/badge/Node.js-Backend-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node.js"/>
+  <img src="https://img.shields.io/badge/Express.js-API-000000?style=flat-square&logo=express" alt="Express"/>
+  <img src="https://img.shields.io/badge/MongoDB-Atlas-47A248?style=flat-square&logo=mongodb&logoColor=white" alt="MongoDB"/>
+  <img src="https://img.shields.io/badge/Google%20Gemini-AI-4285F4?style=flat-square&logo=google" alt="Gemini AI"/>
 
 </div>
 
 ---
 
-## 🏛️ About ANVESHAK
+## 🌐 Live Demo
 
-**ANVESHAK** is a secure, unified digital justice platform designed to streamline the management, sharing, tracking, and analysis of legal and investigation-related documents.
+Experience the deployed application:
 
-The platform connects citizens, police departments, investigating agencies, and courts through a centralized digital ecosystem.
+### 🔗 [Open ANVESHAK Live Demo](https://anveshak-885p245yf-khushi-singh-collabs-projects.vercel.app/)
 
-It addresses the fragmentation of India's justice infrastructure by providing a secure environment for:
+> The live deployment demonstrates the ANVESHAK frontend and its integrated digital justice workflow.
 
-- Digital FIR registration
-- Case tracking
-- Evidence management
-- Cross-agency collaboration
-- Court document access
-- AI-powered case analysis
-- Blockchain-backed document integrity
-- Transparent audit trails
+---
 
-ANVESHAK is designed around the vision of:
+## 🏛️ About the Project
 
-> **"One Nation. One Justice Network."**
+**ANVESHAK** is a secure digital document management and justice coordination platform designed to connect citizens, police departments, investigation agencies, and courts through a unified digital ecosystem.
+
+The platform aims to simplify the management of legal and investigation-related information by bringing together:
+
+* Digital FIR registration
+* Case tracking
+* Investigation management
+* Secure evidence storage
+* Cross-agency collaboration
+* Court document access
+* AI-powered case analysis
+* Blockchain-backed document integrity
+* Audit trails and controlled access
+
+ANVESHAK is built around the vision:
+
+> **One Nation. One Justice Network.**
 
 ---
 
 ## 🎯 Problem Statement
 
-Legal and investigation workflows often involve multiple disconnected systems, departments, and documentation channels.
+Legal and investigation workflows frequently involve disconnected departments, fragmented information, manual documentation, and delayed communication.
 
-This creates challenges such as:
+This can lead to:
 
-- Fragmented case information
-- Delayed inter-department communication
-- Difficulty tracking FIR and case progress
-- Risk of document tampering
-- Lack of transparent evidence history
-- Repetitive manual document analysis
-- Limited accessibility for citizens
-- Inefficient coordination between police and judiciary
+* Difficulty tracking case progress
+* Fragmented FIR and investigation records
+* Delays in sharing documents between agencies
+* Repetitive manual case analysis
+* Challenges in maintaining evidence history
+* Risk of document tampering
+* Limited transparency for citizens
+* Inefficient coordination between police and judiciary
 
-ANVESHAK aims to solve these problems through a unified, secure, and intelligent digital platform.
+ANVESHAK addresses these challenges through a centralized, secure, and intelligent digital platform.
 
 ---
 
-## ✨ Key Features
+## ✨ Core Features
 
 ### 👤 Citizen Portal
 
-- Digital e-FIR registration
-- FIR status tracking
-- Case progress monitoring
-- Bilingual interface with English and Hindi support
-- Smart FAQ and justice-related search
-- Secure citizen authentication
-- Easy access to case-related information
+* Digital e-FIR registration
+* FIR tracking
+* Case status monitoring
+* Access to case-related updates
+* English and Hindi language support
+* Smart FAQ search
+* Secure authentication workflow
 
 ### 👮 Police & Investigation Dashboard
 
-- Centralized case management
-- View assigned and active cases
-- Create cases from registered FIRs
-- Update case status and priority
-- Cross-agency case sharing
-- Inter-department collaboration
-- Secure evidence access
-- Detailed case timelines
-- Audit trail visibility
+* View and manage assigned cases
+* Create cases from FIR records
+* Update case status
+* Set case priority
+* View case timelines
+* Access authorized investigation information
+* Cross-agency document sharing
+* Investigation analytics
 
 ### 📁 Secure Evidence Vault
 
-- Upload investigation documents
-- Secure digital evidence storage
-- Evidence metadata management
-- Chain-of-custody tracking
-- Document integrity verification
-- Controlled access to sensitive files
-- Tamper-evident document records
+* Upload investigation documents
+* Store digital evidence securely
+* Maintain evidence metadata
+* Track document history
+* Support chain-of-custody workflows
+* Restrict access to authorized users
+* Verify document integrity
 
-### ⚖️ Judiciary & Court Access
+### ⚖️ Court & Judiciary Access
 
-- View case information
-- Access FIR and investigation documents
-- Review submitted evidence
-- Monitor case proceedings
-- Secure document exchange between departments
+* Access authorized case records
+* Review FIR information
+* View submitted investigation documents
+* Access relevant evidence
+* Support secure document exchange
+* Monitor case-related information
 
 ### 🤖 AI-Powered Case Analysis
 
-ANVESHAK integrates Google Gemini-powered analysis to assist investigators with structured case intelligence.
+ANVESHAK integrates Google Gemini to assist authorized users in understanding case information.
 
-The AI analysis can generate:
+The AI analysis workflow can generate structured insights such as:
 
-- Case summary
-- Case classification
-- Confidence score
-- Severity assessment
-- Important keywords
-- Key information
-- Investigation insights
-- Event timeline
-- Potentially relevant details from documents
+* Case summary
+* Case classification
+* Confidence score
+* Severity
+* Important keywords
+* Key information
+* Investigation timeline
+* Relevant case details
 
-This reduces repetitive manual analysis and helps officers quickly understand large volumes of case information.
+This helps reduce repetitive manual analysis and allows users to quickly understand large amounts of case information.
 
-> AI-generated insights are intended to assist authorized users and do not replace official investigation or judicial decisions.
+> AI-generated outputs are intended to assist authorized users and do not replace official investigation, legal, or judicial decisions.
 
-### 🔐 Secure Authentication
+### 🔐 Authentication & Authorization
 
-- JWT-based authentication
-- Role-based access control
-- Secure password hashing
-- OTP-based verification support
-- Officer identity verification workflow
-- Protected API routes
-- Session-based authorization
+* JWT-based authentication
+* Role-based access control
+* Password hashing
+* Protected API routes
+* Secure user sessions
+* OTP verification workflow
+* Authorization-based access to sensitive information
 
-### ⛓️ Blockchain Integration
+### ⛓️ Blockchain-Based Integrity
 
-Blockchain-based mechanisms are used to support document integrity and traceability.
+Blockchain-related functionality supports the integrity and traceability of digital documents.
 
-The system is designed to maintain:
+The system is designed to support:
 
-- Tamper-evident document records
-- Document hash verification
-- Evidence integrity
-- Transparent verification history
-- Improved trust in digital documentation
+* Document hash verification
+* Tamper-evident records
+* Evidence integrity
+* Transparent verification history
+* Trustworthy digital documentation
 
 ### 📊 Smart Search & Analytics
 
-- Search cases using case ID
-- Search FIR records
-- Search by keywords
-- Search by case status
-- Search by priority
-- Search by category
-- Case analytics dashboard
-- State-level data visualization
-- Investigation statistics
+* Search by case ID
+* Search by FIR ID
+* Search using keywords
+* Filter by case status
+* Filter by priority
+* Search case categories
+* Case statistics
+* Investigation analytics
+* Data visualization
 
-### 🌐 Real-Time Communication
+### ⚡ Real-Time Updates
 
-- Real-time updates using Socket.IO
-- Inter-department communication support
-- Live case-related updates
-- Improved coordination between authorized users
-
----
-
-## 🖥️ Platform Roles
-
-ANVESHAK supports multiple user roles with role-specific dashboards.
-
-| Role | Capabilities |
-|------|--------------|
-| Citizen | Register FIRs, track cases, view updates |
-| Police Officer | Manage cases, investigate, upload evidence |
-| Investigation Agency | Share and access authorized case information |
-| Court / Judiciary | Review cases and submitted documents |
-| Administrator | Manage platform-level operations |
-
-Each role receives access only to the functionality permitted by its authorization level.
+* Socket.IO integration
+* Real-time communication support
+* Live case-related updates
+* Improved coordination between authorized users
 
 ---
 
-## 🧠 System Architecture
+## 🧩 User Roles
+
+| User Role            | Main Capabilities                            |
+| -------------------- | -------------------------------------------- |
+| Citizen              | Register FIRs, track cases, view updates     |
+| Police Officer       | Manage cases, investigate, upload evidence   |
+| Investigation Agency | Access and share authorized case information |
+| Court / Judiciary    | Review authorized case records and documents |
+| Administrator        | Manage platform-level operations             |
+
+Access to features is controlled according to the user's role and authorization.
+
+---
+
+## 🛠️ Technology Stack
+
+### Frontend
+
+* React
+* Vite
+* Tailwind CSS
+* React Router
+* Lucide React
+* React Simple Maps
+* D3 Geo
+* TopoJSON
+* Socket.IO Client
+
+### Backend
+
+* Node.js
+* Express.js
+* MongoDB
+* Mongoose
+* Socket.IO
+* JSON Web Tokens
+* bcryptjs
+* Multer
+* Sharp
+* PDF-Lib
+* CORS
+* dotenv
+
+### Artificial Intelligence
+
+* Google Gemini API
+* `@google/genai`
+* AI-powered case summarization
+* Case classification
+* Severity analysis
+* Keyword extraction
+* Timeline generation
+
+### Database
+
+* MongoDB Atlas
+* Mongoose ODM
+
+### Security
+
+* JWT authentication
+* Password hashing
+* Role-based authorization
+* Protected routes
+* Environment variable configuration
+* Document integrity verification
+
+### Deployment
+
+* Vercel
+* Node.js-compatible backend hosting
+* MongoDB Atlas
+
+---
+
+## 🏗️ System Architecture
 
 ```text
                          ┌──────────────────────┐
-                         │      Citizens        │
+                         │       Citizens       │
                          └──────────┬───────────┘
                                     │
                          ┌──────────▼───────────┐
                          │   ANVESHAK Frontend  │
-                         │ React + Vite + UI    │
+                         │    React + Vite      │
                          └──────────┬───────────┘
                                     │
-                          REST APIs / WebSockets
+                           REST APIs / WebSockets
                                     │
                          ┌──────────▼───────────┐
                          │   Node.js + Express  │
-                         │     Backend API      │
-                         └──────┬─────┬────────┘
-                                │     │
-                 ┌──────────────┘     └──────────────┐
-                 │                                   │
-       ┌─────────▼─────────┐              ┌──────────▼─────────┐
-       │   MongoDB Atlas   │              │   Google Gemini AI │
-       │ Case & User Data  │              │ Case Intelligence │
-       └───────────────────┘              └────────────────────┘
-                 │
-       ┌─────────▼─────────┐
-       │ Blockchain Layer  │
-       │ Document Integrity│
-       └───────────────────┘
+                         │      Backend         │
+                         └──────┬──────┬────────┘
+                                │      │
+                  ┌─────────────┘      └─────────────┐
+                  │                                  │
+        ┌─────────▼─────────┐             ┌──────────▼─────────┐
+        │   MongoDB Atlas   │             │   Google Gemini AI │
+        │ Users, Cases, FIRs│             │ Case Intelligence  │
+        └───────────────────┘             └────────────────────┘
+                  │
+        ┌─────────▼─────────┐
+        │ Blockchain Layer  │
+        │ Document Integrity│
+        └───────────────────┘
+```
+
+---
+
+## 📂 Project Structure
+
+```text
+ANVESHAK/
+│
+├── public/
+│   ├── logo.jpg
+│   ├── favicon.svg
+│   ├── icons.svg
+│   └── slider/
+│
+├
+```
