@@ -13,7 +13,10 @@ import {
   FileCheck, Link as LinkIcon
 } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_ROOT =
+  import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+
+const API_URL = API_ROOT.replace(/\/api\/?$/, '');
 
 // Unified pre-trial timeline stages — identical to officer/citizen view
 const caseTimelineStages = [
