@@ -17,7 +17,6 @@ const evidenceRoutes = require("./routes/evidenceRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const signatureRoutes = require("./routes/signatureRoutes");
 const custodyRoutes = require("./routes/custodyRoutes");
-const courtRoutes = require("./routes/courtRoutes");
 
 const app = express();
 

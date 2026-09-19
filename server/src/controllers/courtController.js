@@ -80,8 +80,7 @@ const saveDocument = async (req, caseId, type, signatureData) => {
     caseId,
     userId: req.user.userId,
     action: "UPLOADED_DOCUMENT",
-    details: `Uploaded ${type}: ${req.file.originalname}`,
-    ipAddress: req.ip || req.headers["x-forwarded-for"] || "unknown"
+    description: `Uploaded ${type}: ${req.file.originalname}`
   });
 
   return doc;
@@ -287,8 +286,7 @@ exports.addAuditLog = async (req, res) => {
       caseId,
       userId: req.user.userId,
       action: action || "VIEWED_CASE",
-      details: details || `Viewed case ${caseId} dashboard`,
-      ipAddress: req.ip || req.headers["x-forwarded-for"] || "unknown"
+      description: details || `Viewed case ${caseId} dashboard`
     });
     
     res.status(201).json({ message: "Audit log recorded securely", log });

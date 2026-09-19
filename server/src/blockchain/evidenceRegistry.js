@@ -24,16 +24,23 @@ const contract = new ethers.Contract(
 );
 
 const anchorEvidence = async (evidenceId, evidenceHash) => {
-  const tx = await contract.anchorEvidence(
-    evidenceId,
-    evidenceHash
+  // Promise that rejects after 5 seconds
+  const timeout = new Promise((_, reject) => 
+    setTimeout(() => reject(new Error("Blockchain RPC timeout")), 5000)
   );
 
-  const receipt = await tx.wait();
-
-  return {
-    transactionHash: receipt.hash,
+  const txPromise = async () => {
+    const tx = await contract.anchorEvidence(
+      evidenceId,
+      evidenceHash
+    );
+    const receipt = await tx.wait();
+    return {
+      transactionHash: receipt.hash,
+    };
   };
+
+  return Promise.race([txPromise(), timeout]);
 };
 
 const getAnchoredEvidence = async (evidenceId) => {

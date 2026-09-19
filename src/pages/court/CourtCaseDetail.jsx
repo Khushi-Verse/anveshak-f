@@ -177,6 +177,7 @@ export default function CourtCaseDetail() {
             date: new Date(c.createdAt).toLocaleDateString(),
             location: c.jurisdiction || c.firId?.incidentLocation || 'District Court',
             description: c.firId?.incidentDescription || 'No description',
+            aiAnalysis: c.aiAnalysis || null,
             timeline: timelineData.length > 0 ? timelineData : null,
             statusStep: statusStep,
             auditLog: auditData,
@@ -292,147 +293,8 @@ export default function CourtCaseDetail() {
 
       if (!res.ok) throw new Error('Failed to save order');
       const data = await res.json();
-
-      if (data.timeline) {
-        setTimelineData(prev => [data.timeline, ...prev]);
-      }
-
-      const newOrder = {
-        hearingDate: data.order.hearingDate,
-        note: data.order.note,
-        nextHearingDate: data.order.nextHearingDate || 'TBD',
-        pdfName: data.document?.filename || (orderFile ? orderFile.name : null),
-        signedBy: data.order.signedBy,
-        signedAt: new Date(data.order.signedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      };
-
-      setOrders(prev => [...prev, newOrder]);
-
-      if (data.document) {
-        setDocuments(prev => [
-          {
-            id: data.document._id,
-            filename: data.document.filename,
-            type: data.document.type,
-            uploadedBy: judgeName,
-            date: new Date(data.document.createdAt).toISOString().split('T')[0],
-            size: `${(data.document.size / (1024 * 1024)).toFixed(2)} MB`,
-            verified: data.document.digitalSignature?.verified
-          },
-          ...prev,
-        ]);
-      }
-
-      alert('Order successfully recorded with Cryptographic Digital Signature verification.');
-      setShowOrderModal(false);
-      setVerifiedSignature(null);
-      setOrderFile(null);
-      setOrderNote('');
-      setHearingDate('');
-      setNextHearingDate('');
-    } catch (err) {
-      console.error(err);
-      alert('Error saving order to backend.');
-    }
-  };
-
-  const handleUploadJudgmentSubmit = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem('anveshak_token') || '';
-    const currentCaseId = caseData.caseId || id;
-
-    const formData = new FormData();
-    if (judgmentRemarks) formData.append('remarks', judgmentRemarks);
-    if (verifiedSignature) formData.append('signatureData', JSON.stringify(verifiedSignature));
-    if (judgmentFile) formData.append('file', judgmentFile);
-
-    try {
-      const res = await fetch(`${API_URL}/api/court/case/${currentCaseId}/judgment`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
-
-      if (!res.ok) throw new Error('Failed to save final judgment');
-      const data = await res.json();
-
-      setCaseStatus('Disposed');
-
-      if (data.timeline) {
-        setTimelineData(prev => [data.timeline, ...prev]);
-      }
-
-      if (data.document) {
-        setDocuments(prev => [
-          {
-            id: data.document._id,
-            filename: data.document.filename,
-            type: data.document.type,
-            uploadedBy: judgeName,
-            date: new Date(data.document.createdAt).toISOString().split('T')[0],
-            size: `${(data.document.size / (1024 * 1024)).toFixed(2)} MB`,
-            verified: data.document.digitalSignature?.verified
-          },
-          ...prev,
-        ]);
-      }
-
-      alert(`Final Judgment securely uploaded and cryptographically signed. Case marked as DISPOSED.`);
-      setJudgmentFile(null);
-      setJudgmentRemarks('');
-      setVerifiedSignature(null);
-      setShowJudgmentModal(false);
-    } catch (err) {
-      console.error(err);
-      alert('Error uploading judgment to backend.');
-    }
-  };
-
-  const handleUploadDocumentSubmit = async (e) => {
-    e.preventDefault();
-    if (!docFile) return;
-    const token = localStorage.getItem('anveshak_token') || '';
-    const currentCaseId = caseData.caseId || id;
-
-    const formData = new FormData();
-    formData.append('type', docType || 'Court Document');
-    if (verifiedSignature) formData.append('signatureData', JSON.stringify(verifiedSignature));
-    formData.append('file', docFile);
-
-    try {
-      const res = await fetch(`${API_URL}/api/court/case/${currentCaseId}/document`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
-
-      if (!res.ok) throw new Error('Failed to save document');
-      const data = await res.json();
-
-      if (data.document) {
-        setDocuments(prev => [
-          {
-            id: data.document._id,
-            filename: data.document.filename,
-            type: data.document.type,
-            uploadedBy: judgeName,
-            date: new Date(data.document.createdAt).toISOString().split('T')[0],
-            size: `${(data.document.size / (1024 * 1024)).toFixed(2)} MB`,
-            verified: data.document.digitalSignature?.verified
-          },
-          ...prev,
-        ]);
-      }
-
-      alert(`Document "${docFile.name}" successfully verified, cryptographically signed, and added to docket.`);
-      setDocFile(null);
-      setDocType('Court Order');
-      setVerifiedSignature(null);
-      setShowDocumentModal(false);
+        alert('Document securely uploaded and cryptographically signed.');
+        window.location.reload();
     } catch (err) {
       console.error(err);
       alert('Error uploading document to backend.');
@@ -444,17 +306,12 @@ export default function CourtCaseDetail() {
       <div className="max-w-6xl mx-auto space-y-6">
 
         {/* Top Navigation */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between animate-fade-in-up mb-4 ">
           <Link to="/court" className="flex items-center text-[#0B3D91] hover:text-[#0B3D91]/80 font-medium transition-colors">
             <ArrowLeft className="w-5 h-5 mr-2" />
             Back to Dashboard
           </Link>
           <div className="flex items-center gap-3">
-            {!caseData.aiAnalysis && (
-              <button onClick={handleAnalyzeWithAI} className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm font-medium text-sm">
-                <Activity className="w-4 h-4 mr-2" /> Analyze Case
-              </button>
-            )}
             <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
               caseStatus === 'Disposed' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'
             }`}>
@@ -502,101 +359,102 @@ export default function CourtCaseDetail() {
           </div>
         </div>
 
-        {caseData.aiAnalysis && (
-          <div className="bg-gradient-to-br from-indigo-900 to-violet-900 rounded-2xl shadow-lg p-6 mb-6 text-white animate-fade-in-up">
-            <h2 className="text-xl font-serif font-bold mb-4 flex items-center">
-              <Activity className="w-5 h-5 mr-2 text-indigo-300" /> Gemini AI Analysis
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              <div className="bg-white/10 rounded-lg p-3">
-                <p className="text-indigo-200 text-xs uppercase font-bold">Classification</p>
-                <p className="font-semibold">{caseData.aiAnalysis.classification || 'Unknown'}</p>
-              </div>
-              <div className="bg-white/10 rounded-lg p-3">
-                <p className="text-indigo-200 text-xs uppercase font-bold">Confidence</p>
-                <p className="font-semibold">{caseData.aiAnalysis.confidence ?? caseData.aiAnalysis.confidenceScore ?? 'N/A'}</p>
-              </div>
-              <div className="bg-white/10 rounded-lg p-3">
-                <p className="text-indigo-200 text-xs uppercase font-bold">Severity</p>
-                <p className="font-semibold">{caseData.aiAnalysis.severity || 'Unknown'}</p>
-              </div>
-            </div>
-            <div className="bg-white/10 rounded-lg p-4 mb-4">
-              <p className="text-indigo-200 text-xs uppercase font-bold mb-1">Summary</p>
-              <p className="text-sm leading-relaxed">{caseData.aiAnalysis.summary}</p>
-            </div>
-            <div className="bg-white/10 rounded-lg p-4 mb-4">
-              <p className="text-indigo-200 text-xs uppercase font-bold mb-1">Reasoning</p>
-              <p className="text-sm leading-relaxed">{caseData.aiAnalysis.severityReason || caseData.aiAnalysis.reasoning || 'No reasoning provided.'}</p>
-            </div>
-            
-            {(caseData.aiAnalysis.keyInformation?.length > 0 || caseData.aiAnalysis.keywords?.length > 0) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div className="bg-white/10 rounded-lg p-4">
-                  <p className="text-indigo-200 text-xs uppercase font-bold mb-2">Key Information</p>
-                  <ul className="list-disc list-inside text-sm space-y-1">
-                    {caseData.aiAnalysis.keyInformation?.map((info, idx) => (
-                      <li key={idx}>{info}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="bg-white/10 rounded-lg p-4">
-                  <p className="text-indigo-200 text-xs uppercase font-bold mb-2">Keywords</p>
-                  <div className="flex flex-wrap gap-2">
-                    {caseData.aiAnalysis.keywords?.map((kw, idx) => (
-                      <span key={idx} className="bg-indigo-800/50 px-2 py-1 rounded text-xs border border-indigo-500/30">{kw}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {caseData.aiAnalysis.investigationLeads?.length > 0 && (
-              <div className="bg-white/10 rounded-lg p-4 mb-4 border-l-4 border-emerald-400">
-                <p className="text-emerald-300 text-xs uppercase font-bold mb-2">Investigation Leads</p>
-                <ul className="list-disc list-inside text-sm space-y-1">
-                  {caseData.aiAnalysis.investigationLeads?.map((lead, idx) => (
-                    <li key={idx}>{lead}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {caseData.aiAnalysis.riskIndicators?.length > 0 && (
-              <div className="bg-white/10 rounded-lg p-4 mb-4 border-l-4 border-red-400">
-                <p className="text-red-300 text-xs uppercase font-bold mb-2">Risk Indicators</p>
-                <ul className="list-disc list-inside text-sm space-y-1">
-                  {caseData.aiAnalysis.riskIndicators?.map((risk, idx) => (
-                    <li key={idx}>{risk}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {caseData.aiAnalysis.entities && Object.keys(caseData.aiAnalysis.entities).length > 0 && (
-              <div className="bg-white/10 rounded-lg p-4">
-                <p className="text-indigo-200 text-xs uppercase font-bold mb-2">Entities Extracted</p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
-                  {Object.entries(caseData.aiAnalysis.entities).map(([type, list]) => {
-                    if (!list || list.length === 0) return null;
-                    return (
-                      <div key={type}>
-                        <span className="text-indigo-300 font-semibold capitalize block mb-1">{type}:</span>
-                        <span className="text-white">{list.join(', ')}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Two-Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* LEFT: Timelines (spans 2 cols) */}
           <div className="lg:col-span-2 space-y-6">
+
+            {caseData.aiAnalysis && (
+              <div className="bg-gradient-to-br from-indigo-900 to-violet-900 rounded-2xl shadow-lg p-6 mb-6 text-white animate-fade-in-up">
+                <h2 className="text-xl font-serif font-bold mb-4 flex items-center">
+                  <Activity className="w-5 h-5 mr-2 text-indigo-300" /> Gemini AI Analysis
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  <div className="bg-white/10 rounded-lg p-3">
+                    <p className="text-indigo-200 text-xs uppercase font-bold">Classification</p>
+                    <p className="font-semibold">{caseData.aiAnalysis.classification || 'Unknown'}</p>
+                  </div>
+                  <div className="bg-white/10 rounded-lg p-3">
+                    <p className="text-indigo-200 text-xs uppercase font-bold">Confidence</p>
+                    <p className="font-semibold">{caseData.aiAnalysis.confidence ?? caseData.aiAnalysis.confidenceScore ?? 'N/A'}</p>
+                  </div>
+                  <div className="bg-white/10 rounded-lg p-3">
+                    <p className="text-indigo-200 text-xs uppercase font-bold">Severity</p>
+                    <p className="font-semibold">{caseData.aiAnalysis.severity || 'Unknown'}</p>
+                  </div>
+                </div>
+                <div className="bg-white/10 rounded-lg p-4 mb-4">
+                  <p className="text-indigo-200 text-xs uppercase font-bold mb-1">Summary</p>
+                  <p className="text-sm leading-relaxed">{caseData.aiAnalysis.summary}</p>
+                </div>
+                <div className="bg-white/10 rounded-lg p-4 mb-4">
+                  <p className="text-indigo-200 text-xs uppercase font-bold mb-1">Reasoning</p>
+                  <p className="text-sm leading-relaxed">{caseData.aiAnalysis.severityReason || caseData.aiAnalysis.reasoning || 'No reasoning provided.'}</p>
+                </div>
+                
+                {(caseData.aiAnalysis.keyInformation?.length > 0 || caseData.aiAnalysis.keywords?.length > 0) && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="bg-white/10 rounded-lg p-4">
+                      <p className="text-indigo-200 text-xs uppercase font-bold mb-2">Key Information</p>
+                      <ul className="list-disc list-inside text-sm space-y-1">
+                        {caseData.aiAnalysis.keyInformation?.map((info, idx) => (
+                          <li key={idx}>{info}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="bg-white/10 rounded-lg p-4">
+                      <p className="text-indigo-200 text-xs uppercase font-bold mb-2">Keywords</p>
+                      <div className="flex flex-wrap gap-2">
+                        {caseData.aiAnalysis.keywords?.map((kw, idx) => (
+                          <span key={idx} className="bg-indigo-800/50 px-2 py-1 rounded text-xs border border-indigo-500/30">{kw}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {caseData.aiAnalysis.investigationLeads?.length > 0 && (
+                  <div className="bg-white/10 rounded-lg p-4 mb-4 border-l-4 border-emerald-400">
+                    <p className="text-emerald-300 text-xs uppercase font-bold mb-2">Investigation Leads</p>
+                    <ul className="list-disc list-inside text-sm space-y-1">
+                      {caseData.aiAnalysis.investigationLeads?.map((lead, idx) => (
+                        <li key={idx}>{lead}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {caseData.aiAnalysis.riskIndicators?.length > 0 && (
+                  <div className="bg-white/10 rounded-lg p-4 mb-4 border-l-4 border-red-400">
+                    <p className="text-red-300 text-xs uppercase font-bold mb-2">Risk Indicators</p>
+                    <ul className="list-disc list-inside text-sm space-y-1">
+                      {caseData.aiAnalysis.riskIndicators?.map((risk, idx) => (
+                        <li key={idx}>{risk}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {caseData.aiAnalysis.entities && Object.keys(caseData.aiAnalysis.entities).length > 0 && (
+                  <div className="bg-white/10 rounded-lg p-4">
+                    <p className="text-indigo-200 text-xs uppercase font-bold mb-2">Entities Extracted</p>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                      {Object.entries(caseData.aiAnalysis.entities).map(([type, list]) => {
+                        if (!list || list.length === 0) return null;
+                        return (
+                          <div key={type}>
+                            <span className="text-indigo-300 font-semibold capitalize block mb-1">{type}:</span>
+                            <span className="text-white">{list.join(', ')}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Pre-Trial Unified Timeline — read-only for judge */}
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
@@ -823,17 +681,15 @@ export default function CourtCaseDetail() {
       {/* ══════════════════════════════════════════════════════════════ */}
       {/* ── STEP 1: Signature Verification Modal (Draw / DigiLocker) ── */}
       {/* ══════════════════════════════════════════════════════════════ */}
-      <SignatureVerification
-        isOpen={isSigModalOpen}
-        onClose={() => setIsSigModalOpen(false)}
-        onVerified={handleSignatureVerified}
+      <SignatureVerification 
+        isOpen={isSigModalOpen} 
+        onClose={() => setIsSigModalOpen(false)} 
+        onVerified={handleSignatureVerified} 
         officerName={judgeName}
         actionDescription={
-          actionType === 'order'
-            ? `Record Court Order for Case ${caseData.caseId || caseData.id}`
-            : actionType === 'judgment'
-            ? `Sign & Issue Final Judgment for Case ${caseData.caseId || caseData.id}`
-            : `Upload Judicial Document to Case ${caseData.caseId || caseData.id}`
+          actionType === 'order' ? 'Sign & Issue Court Order' : 
+          actionType === 'judgment' ? 'Sign & Upload Final Judgment' : 
+          'Sign & Upload Court Document'
         }
       />
 

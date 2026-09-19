@@ -68,6 +68,14 @@ const uploadEvidence = async (req, res) => {
       blockchainStatus: "NOT_ANCHORED",
     });
 
+    const AuditLog = require('../models/AuditLog');
+    await AuditLog.create({
+      userId: req.user.userId,
+      caseId: caseId,
+      action: 'EVIDENCE_UPLOADED',
+      description: `Uploaded evidence file: ${req.file.originalname}`
+    });
+
     // Anchor evidence hash on blockchain
     try {
       const blockchainResult = await anchorEvidence(
@@ -83,15 +91,6 @@ const uploadEvidence = async (req, res) => {
       evidence.blockchainAnchoredAt = new Date();
 
       await evidence.save();
-      
-      const AuditLog = require('../models/AuditLog');
-      await AuditLog.create({
-        userId: req.user.userId,
-        caseId: caseId,
-        action: 'EVIDENCE_UPLOADED',
-        description: `Uploaded evidence file: ${req.file.originalname}`
-      });
-
     } catch (blockchainError) {
       // Evidence is already safely stored in MongoDB.
       // Blockchain anchoring failed, so mark it accordingly.

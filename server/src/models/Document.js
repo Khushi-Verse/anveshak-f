@@ -39,7 +39,7 @@ const documentSchema = new mongoose.Schema(
     },
     // Used for judicial signatures and cryptographic verification
     digitalSignature: {
-      method: { type: String, enum: ["canvas", "digilocker", "none"], default: "none" },
+      method: { type: String, enum: ["canvas", "digilocker", "upload", "none"], default: "none" },
       officerName: { type: String, default: null },
       timestamp: { type: Date, default: null },
       documentHash: { type: String, default: null }, // SHA-256 Hash of uploaded file
