@@ -24,7 +24,7 @@ export default function CaseDetail() {
   const { id } = useParams();
   const { user } = useAuth();
   const [showUploadEvidence, setShowUploadEvidence] = useState(false);
-  const [signatureVerified, setSignatureVerified] = useState(false);
+  const [signingEvidenceId, setSigningEvidenceId] = useState(null);
   const [verifyingEvidence, setVerifyingEvidence] = useState(null);
   const [verifyingSigEvidence, setVerifyingSigEvidence] = useState(null);
   const [evidenceFile, setEvidenceFile] = useState(null);
@@ -150,31 +150,193 @@ export default function CaseDetail() {
 
   const handleEvidenceUpload = async (e) => {
     e.preventDefault();
-    if (!evidenceFile) return;
+
+    if (!evidenceFile) {
+      alert("Please select an evidence file.");
+      return;
+    }
+
     try {
-      const token = localStorage.getItem('anveshak_token');
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+      const token = localStorage.getItem("anveshak_token");
+      const API_URL =
+        import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+
       const formData = new FormData();
-      formData.append('file', evidenceFile);
-      formData.append('caseId', caseData.caseId || caseData.id);
-      formData.append('description', 'Evidence document uploaded by officer');
-      
-      const res = await fetch(`${API_URL}/evidence/upload`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData
-      });
-      if(res.ok) {
-        setEvidenceFile(null);
-        setShowUploadEvidence(false);
-        setSignatureVerified(false);
-        window.location.reload();
-      } else {
-        const d = await res.json();
-        alert("Upload failed: " + d.message);
+
+      formData.append("file", evidenceFile);
+      formData.append(
+        "caseId",
+        caseData.caseId || caseData.id
+      );
+      formData.append(
+        "description",
+        "Evidence document uploaded by officer"
+      );
+
+      const res = await fetch(
+        `${API_URL}/evidence/upload`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(
+          data.message || "Evidence upload failed"
+        );
       }
-    } catch(err) {
+
+      setEvidenceFile(null);
+      setShowUploadEvidence(false);
+
+      window.location.reload();
+
+    } catch (err) {
+      console.error("Evidence upload error:", err);
       alert("Error uploading evidence: " + err.message);
+    }
+  };
+  const handleSignEvidence = (evidenceId) => {
+    setSigningEvidenceId(evidenceId);
+  };
+  const handleViewSignedEvidence = async (evidenceId) => {
+    try {
+      const token = localStorage.getItem("anveshak_token");
+
+      const API_URL =
+        import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+
+      const res = await fetch(
+        `${API_URL}/evidence/${evidenceId}/signed`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(
+          data.message || "Signed evidence not found."
+        );
+      }
+
+      const blob = await res.blob();
+      const fileURL = URL.createObjectURL(blob);
+
+      window.open(fileURL, "_blank");
+
+      setTimeout(() => {
+        URL.revokeObjectURL(fileURL);
+      }, 60000);
+    } catch (err) {
+      console.error("View signed evidence error:", err);
+      alert("Error opening signed evidence: " + err.message);
+    }
+  };
+  const handleDownloadSignedEvidence = async (
+    evidenceId,
+    filename = "evidence"
+  ) => {
+    try {
+      const token = localStorage.getItem("anveshak_token");
+
+      const API_URL =
+        import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+
+      const res = await fetch(
+        `${API_URL}/evidence/${evidenceId}/signed`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(
+          data.message || "Signed evidence not found."
+        );
+      }
+
+      const blob = await res.blob();
+      const fileURL = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = fileURL;
+      link.download = `signed-${filename}`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setTimeout(() => {
+        URL.revokeObjectURL(fileURL);
+      }, 1000);
+
+    } catch (err) {
+      console.error("Download signed evidence error:", err);
+      alert("Error downloading signed evidence: " + err.message);
+    }
+  };
+  const handleSignatureUploaded = async (data) => {
+    if (!signingEvidenceId) {
+      alert("Evidence ID not found.");
+      return;
+    }
+
+    if (!data?.signatureFile) {
+      alert("Please upload your signature.");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("anveshak_token");
+      const API_URL =
+        import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+
+      const signatureFormData = new FormData();
+
+      signatureFormData.append(
+        "signature",
+        data.signatureFile
+      );
+
+      const res = await fetch(
+        `${API_URL}/evidence/${signingEvidenceId}/sign`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: signatureFormData,
+        }
+      );
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(
+          result.message || "Digital signing failed"
+        );
+      }
+
+      setSigningEvidenceId(null);
+      window.location.reload();
+
+    } catch (err) {
+      console.error("Digital signing error:", err);
+      alert("Error signing evidence: " + err.message);
     }
   };
 
@@ -545,6 +707,30 @@ export default function CaseDetail() {
                           >
                             Verify Sig
                           </button>
+                          <button
+                            onClick={() => handleSignEvidence(item.evidenceId)}
+                            className="px-2 py-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded transition-colors text-xs font-semibold whitespace-nowrap"
+                          >
+                            Sign Evidence
+                          </button>
+                          <button
+                            onClick={() => handleViewSignedEvidence(item.evidenceId)}
+                            className="px-2 py-1 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded transition-colors text-xs font-semibold whitespace-nowrap"
+                          >
+                            View Signed Evidence
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleDownloadSignedEvidence(
+                                item.evidenceId,
+                                item.filename
+                              )
+                            }
+                            className="px-2 py-1 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded transition-colors text-xs font-semibold whitespace-nowrap"
+                          >
+                            Download Signed
+                          </button>
+
                           <button className="p-1.5 text-violet-600 hover:bg-violet-100 rounded transition-colors" title="Download">
                             <Download className="w-4 h-4" />
                           </button>
@@ -579,48 +765,44 @@ export default function CaseDetail() {
                 <h3 className="text-lg font-serif font-semibold text-violet-800 mb-4 flex items-center">
                   <Upload className="w-5 h-5 mr-2" /> Upload Evidence
                 </h3>
-                
-                {!signatureVerified ? (
-                  <div className="space-y-4">
-                    <p className="text-sm text-slate-600 mb-2">Cryptographic signature required to upload verified evidence to this case file. Please complete the signature verification prompt.</p>
+
+                <form
+                  onSubmit={handleEvidenceUpload}
+                  className="space-y-4 animate-fade-in-up"
+                >
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Select File
+                    </label>
+
+                    <input
+                      type="file"
+                      onChange={(e) => setEvidenceFile(e.target.files[0])}
+                      className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
+                      required
+                    />
                   </div>
-                ) : (
-                  <form onSubmit={handleEvidenceUpload} className="space-y-4 animate-fade-in-up">
-                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-start">
-                      <CheckCircle className="w-5 h-5 text-emerald-600 mr-2 shrink-0 mt-0.5" />
-                      <p className="text-xs text-emerald-800">Identity verified. Your digital signature will be appended to the uploaded file.</p>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Select File</label>
-                      <input 
-                        type="file" 
-                        onChange={(e) => setEvidenceFile(e.target.files[0])}
-                        className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100" 
-                        required
-                      />
-                    </div>
-                    
-                    <div className="flex space-x-2 pt-2">
-                      <button 
-                        type="submit"
-                        className="flex-1 bg-violet-600 text-white px-4 py-2 rounded-lg hover:bg-violet-700 transition-colors text-sm font-medium"
-                      >
-                        Sign & Upload
-                      </button>
-                      <button 
-                        type="button"
-                        onClick={() => {
-                          setShowUploadEvidence(false);
-                          setSignatureVerified(false);
-                        }}
-                        className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                )}
+
+                  <div className="flex space-x-2 pt-2">
+                    <button
+                      type="submit"
+                      className="flex-1 bg-violet-600 text-white px-4 py-2 rounded-lg hover:bg-violet-700 transition-colors text-sm font-medium"
+                    >
+                      Upload Evidence
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowUploadEvidence(false);
+                        setEvidenceFile(null);
+                      }}
+                      className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
               </div>
             )}
 
@@ -754,19 +936,19 @@ export default function CaseDetail() {
       </div>
 
       {/* Signature Verification Modals (Root Level) */}
-      <SignatureVerification 
-        isOpen={showUploadEvidence && !signatureVerified}
-        onClose={() => setShowUploadEvidence(false)}
-        onVerified={() => setSignatureVerified(true)} 
-        actionName="Evidence Upload"
+      <SignatureVerification
+        isOpen={!!signingEvidenceId}
+        onClose={() => setSigningEvidenceId(null)}
+        onVerified={handleSignatureUploaded}
+        actionDescription="Sign Evidence"
         officerName="Insp. R. Sharma"
       />
 
-      <SignatureVerification 
+      <SignatureVerification
         isOpen={showEditTimeline && !timelineSignatureVerified}
         onClose={() => setShowEditTimeline(false)}
-        onVerified={() => setTimelineSignatureVerified(true)} 
-        actionName="Timeline Update"
+        onVerified={() => setTimelineSignatureVerified(true)}
+        actionDescription="Timeline Update"
         officerName="Insp. R. Sharma"
       />
 
