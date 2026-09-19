@@ -2,7 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from '../contexts/AuthContext';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+
+const SOCKET_URL = API_URL.replace(/\/api\/?$/, '');
 
 export function useNotifications() {
   const [notifications, setNotifications] = useState([]);
@@ -19,7 +22,7 @@ export function useNotifications() {
     if (!token) return;
 
     // 1. Fetch initial notifications from REST endpoint
-    fetch(`${API_URL}/api/notifications`, {
+   fetch(`${API_URL}/notifications`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => res.json())

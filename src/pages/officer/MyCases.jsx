@@ -18,6 +18,9 @@ export default function MyCases() {
   const [expandedCase, setExpandedCase] = useState(null);
 
   const [sigModal, setSigModal] = useState({ open: false, action: '', caseId: '' });
+  const [showUploadEvidence, setShowUploadEvidence] = useState(false);
+  const [selectedCaseId, setSelectedCaseId] = useState(null);
+  const [evidenceFile, setEvidenceFile] = useState(null);
   const [auditLog, setAuditLog] = useState([]);
   const [toast, setToast] = useState('');
   
@@ -111,6 +114,61 @@ export default function MyCases() {
     setToast(`Action verified and logged — ${entry.officer}, ${ts}`);
     setTimeout(() => setToast(''), 4000);
     setSigModal({ open: false, action: '', caseId: '' });
+  };
+  const handleEvidenceUpload = async (e) => {
+    e.preventDefault();
+
+    if (!evidenceFile || !selectedCaseId) {
+      alert("Please select an evidence file.");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("anveshak_token");
+      const API_URL =
+        import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+
+      const formData = new FormData();
+
+      formData.append("file", evidenceFile);
+      formData.append("caseId", selectedCaseId);
+      formData.append(
+        "description",
+        "Evidence document uploaded by officer"
+      );
+
+      const res = await fetch(
+        `${API_URL}/evidence/upload`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(
+          data.message || "Evidence upload failed"
+        );
+      }
+
+      setEvidenceFile(null);
+      setSelectedCaseId(null);
+      setShowUploadEvidence(false);
+
+      setToast("Evidence uploaded successfully");
+
+      setTimeout(() => {
+        setToast("");
+      }, 4000);
+    } catch (err) {
+      console.error("Evidence upload error:", err);
+      alert("Error uploading evidence: " + err.message);
+    }
   };
 
   if (isLoading) {
@@ -209,7 +267,15 @@ export default function MyCases() {
                   <button onClick={(e) => openSigModal('Update Status', c.id, e)} className="px-4 py-2 bg-navy text-white text-sm font-semibold rounded-lg flex items-center gap-2 hover:bg-navy/90">
                     <Edit3 size={16} /> Update Status
                   </button>
-                  <button onClick={(e) => openSigModal('Upload Evidence', c.id, e)} className="px-4 py-2 bg-saffron text-white text-sm font-semibold rounded-lg flex items-center gap-2 hover:bg-saffron/90">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedCaseId(c.id);
+                      setShowUploadEvidence(true);
+                      setEvidenceFile(null);
+                    }}
+                    className="px-4 py-2 bg-saffron text-white text-sm font-semibold rounded-lg flex items-center gap-2 hover:bg-saffron/90"
+                  >
                     <UploadCloud size={16} /> Upload Evidence
                   </button>
                 </div>
@@ -228,6 +294,71 @@ export default function MyCases() {
           </div>
         )}
       </div>
+      {showUploadEvidence && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6">
+
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-xl font-serif font-bold text-violet-900">
+                Upload Evidence
+              </h2>
+
+              <button
+                onClick={() => {
+                  setShowUploadEvidence(false);
+                  setSelectedCaseId(null);
+                  setEvidenceFile(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleEvidenceUpload} className="space-y-5">
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Select Evidence File
+                </label>
+
+                <input
+                  type="file"
+                  onChange={(e) =>
+                    setEvidenceFile(e.target.files[0])
+                  }
+                  className="block w-full text-sm text-slate-500"
+                  required
+                />
+              </div>
+
+              <div className="flex gap-3">
+
+                <button
+                  type="submit"
+                  className="flex-1 bg-violet-600 text-white px-4 py-2 rounded-lg hover:bg-violet-700 font-medium"
+                >
+                  Upload Evidence
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowUploadEvidence(false);
+                    setSelectedCaseId(null);
+                    setEvidenceFile(null);
+                  }}
+                  className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
 
       <SignatureVerification
         isOpen={sigModal.open}

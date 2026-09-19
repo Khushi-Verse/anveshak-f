@@ -9,7 +9,7 @@ const connectDB = require("./config/db");
 const socketUtil = require("./utils/socket");
 const chatRoutes = require("./routes/chatRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
-
+const courtRoutes = require("./routes/courtRoutes");
 const authRoutes = require("./routes/authRoutes");
 const firRoutes = require("./routes/firRoutes");
 const caseRoutes = require("./routes/caseRoutes");
