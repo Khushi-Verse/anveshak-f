@@ -148,13 +148,22 @@ const verifyEvidence = async (req, res) => {
       });
     }
 
-    // Find the original evidence
-    const evidence = await Evidence.findOne({ evidenceId });
+    // Find the original evidence or document
+    let evidence = await Evidence.findOne({ evidenceId });
+    if (!evidence && evidenceId.length === 24) {
+      const Document = require("../models/Document");
+      evidence = await Document.findById(evidenceId);
+    }
 
     if (!evidence) {
       return res.status(404).json({
-        message: "Evidence not found",
+        message: "Evidence/Document not found",
       });
+    }
+
+    const originalHash = evidence.fileHash || evidence.digitalSignature?.documentHash || evidence.blockchainAnchoredHash;
+    if (!originalHash) {
+       return res.status(400).json({ message: "No hash found on record for this file to verify against." });
     }
 
     // Read the file being verified
@@ -167,24 +176,24 @@ const verifyEvidence = async (req, res) => {
       .digest("hex");
 
     // Compare hashes
-    const isVerified = currentHash === evidence.fileHash;
+    const isVerified = currentHash === originalHash;
 
     // Update verification status
-    evidence.verificationStatus = isVerified
-      ? "VERIFIED"
-      : "TAMPERED";
-
-    await evidence.save();
+    // Note: Document model doesn't have verificationStatus but it doesn't hurt to set it, or we can just ignore saving it if it's a Document.
+    if (evidence.verificationStatus !== undefined) {
+       evidence.verificationStatus = isVerified ? "VERIFIED" : "TAMPERED";
+       await evidence.save();
+    }
 
     // Delete temporary verification file
     fs.unlinkSync(req.file.path);
 
     res.status(200).json({
-      evidenceId,
-      originalHash: evidence.fileHash,
-      currentHash,
-      verificationStatus: evidence.verificationStatus,
+      message: isVerified ? "Evidence verified successfully" : "Evidence integrity check failed",
       verified: isVerified,
+      originalHash: originalHash,
+      currentHash,
+      verificationStatus: isVerified ? "VERIFIED" : "TAMPERED",
     });
   } catch (error) {
     // Remove temporary file if something goes wrong

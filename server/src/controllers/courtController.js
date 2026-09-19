@@ -57,23 +57,22 @@ const saveDocument = async (req, caseId, type, signatureData) => {
 
   await doc.save();
   
-  if (sigData.method !== "none") {
-    try {
-      const blockchainResult = await anchorEvidence(
-        doc._id.toString(),
-        documentHash
-      );
+  // Anchor all court documents to blockchain (like police evidence)
+  try {
+    const blockchainResult = await anchorEvidence(
+      doc._id.toString(),
+      documentHash
+    );
 
-      doc.blockchainStatus = "ANCHORED";
-      doc.blockchainTxHash = blockchainResult.transactionHash;
-      doc.blockchainAnchoredHash = documentHash;
-      doc.blockchainAnchoredAt = new Date();
+    doc.blockchainStatus = "ANCHORED";
+    doc.blockchainTxHash = blockchainResult.transactionHash;
+    doc.blockchainAnchoredHash = documentHash;
+    doc.blockchainAnchoredAt = new Date();
 
-      await doc.save();
-    } catch (err) {
-      doc.blockchainStatus = "FAILED";
-      await doc.save();
-    }
+    await doc.save();
+  } catch (err) {
+    doc.blockchainStatus = "FAILED";
+    await doc.save();
   }
   
   // Hash-Secured Audit Log for Uploads
@@ -138,7 +137,7 @@ exports.addHearingOrder = async (req, res) => {
     await caseRecord.save();
 
     // 3. Update Timeline
-    await Timeline.create({
+    const timelineEntry = await Timeline.create({
       caseId,
       status: caseRecord.status,
       action: "COURT_ORDER_ADDED",
@@ -154,7 +153,7 @@ exports.addHearingOrder = async (req, res) => {
       await createNotification({ userId: caseRecord.assignedOfficer, caseId, type: "COURT_UPDATE", message: `A new court order was added for assigned case ${caseId}.` });
     }
 
-    res.status(201).json({ message: "Hearing order recorded successfully", order: newOrder, document: savedDoc });
+    res.status(201).json({ message: "Order recorded successfully", order: newOrder, document: savedDoc, timeline: timelineEntry });
   } catch (error) {
     console.error("addHearingOrder error:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -197,7 +196,7 @@ exports.uploadFinalJudgment = async (req, res) => {
     await caseRecord.save();
 
     // 3. Update Timeline
-    await Timeline.create({
+    const timelineEntry = await Timeline.create({
       caseId,
       status: "DISPOSED",
       action: "FINAL_JUDGMENT_UPLOADED",
@@ -213,7 +212,7 @@ exports.uploadFinalJudgment = async (req, res) => {
       await createNotification({ userId: caseRecord.assignedOfficer, caseId, type: "STATUS_CHANGED", message: `Assigned case ${caseId} has been DISPOSED by the court.` });
     }
 
-    res.status(201).json({ message: "Final judgment uploaded. Case disposed.", document: savedDoc });
+    res.status(201).json({ message: "Final judgment uploaded. Case disposed.", document: savedDoc, timeline: timelineEntry });
   } catch (error) {
     console.error("uploadFinalJudgment error:", error);
     res.status(500).json({ message: "Internal server error" });

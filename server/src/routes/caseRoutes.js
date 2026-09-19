@@ -49,7 +49,8 @@ router.post(
   allowRoles(
     "POLICE",
     "ADMIN",
-    "INVESTIGATING_AGENCY"
+    "INVESTIGATING_AGENCY",
+    "COURT"
   ),
   analyzeCaseWithAI
 );
