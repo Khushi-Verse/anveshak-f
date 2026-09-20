@@ -853,6 +853,40 @@ const getSystemAuditLogs = async (req, res) => {
   }
 };
 
+// ======================================================
+// GET WOMEN SAFETY CASES
+// ======================================================
+
+const getWomenSafetyCases = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const cases = await Case.find({
+      assignedOfficer: userId,
+    })
+      .populate("firId")
+      .populate("citizenId", "name email")
+      .sort({ createdAt: -1 });
+
+    // Keep only cases whose FIR has Women Safety enabled
+    const womenCases = cases.filter(
+      (caseData) => caseData.firId && caseData.firId.isWomenSafety === true
+    );
+
+    return res.status(200).json({
+      count: womenCases.length,
+      cases: womenCases,
+    });
+  } catch (error) {
+    console.error("Failed to fetch Women Safety cases:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch Women Safety cases",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   addTimelineEvent,
   createCaseFromFIR,
@@ -865,5 +899,6 @@ module.exports = {
   getSystemAuditLogs,
   getCaseStats,
   getTimeline,
+  getWomenSafetyCases,
   analyzeCaseWithAI,
 };

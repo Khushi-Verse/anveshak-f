@@ -15,6 +15,7 @@ export default function Sidebar({ isOpen, onClose }) {
     { to: '/officer', icon: LayoutDashboard, label: t('officer.dashboard'), end: true },
     { to: '/officer/search', icon: Search, label: t('officer.smartSearch') },
     { to: '/officer/cases', icon: Briefcase, label: t('officer.myCases') },
+    { to: '/officer/women-firs', icon: ShieldCheck, label: 'Women FIRs' },
     { to: '/officer/upload', icon: Upload, label: t('officer.resourceUpload') },
     { to: '/officer/sharing', icon: Share2, label: t('officer.dataSharing') },
     { to: '/officer/access', icon: ShieldCheck, label: t('officer.accessControl') },

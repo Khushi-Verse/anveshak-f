@@ -19,6 +19,7 @@ const {
   getCaseStats,
   getTimeline,
   addTimelineEvent,
+  getWomenSafetyCases,
   analyzeCaseWithAI,
 } = require("../controllers/caseController");
 
@@ -112,6 +113,17 @@ router.patch(
     "ADMIN"
   ),
   updateStatus
+);
+
+// ======================================================
+// GET WOMEN SAFETY CASES
+// ======================================================
+
+router.get(
+  "/women-safety",
+  protect,
+  allowRoles("POLICE"),
+  getWomenSafetyCases
 );
 
 // ======================================================
