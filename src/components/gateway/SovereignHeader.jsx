@@ -30,13 +30,7 @@ export const SovereignHeader = ({
       {/* Security Accreditation & Controls */}
       <div className="flex items-center space-x-3 sm:space-x-6 text-sm font-sans-jakarta">
         {/* GIGW Badge */}
-        <div className="hidden lg:flex items-center space-x-3 px-5 py-2.5 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 shadow-xs">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse"></span>
-          <span className="font-semibold tracking-wide text-sm uppercase">
-            GIGW 3.0 • 256-BIT SSL SECURE
-          </span>
-        </div>
-
+       
         {/* Bilingual Switcher */}
         <div className="flex items-center space-x-2 bg-slate-50 border border-[#002244]/15 px-3 py-1.5 rounded-full shadow-xs">
           <button

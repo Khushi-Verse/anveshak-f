@@ -31,7 +31,6 @@ const createSignedImage = async (evidencePath, signaturePath) => {
   return outputPath;
 };
 
-
 const createSignedPdf = async (evidencePath, signaturePath) => {
   const signedDirectory = path.join(
     process.cwd(),
@@ -49,24 +48,16 @@ const createSignedPdf = async (evidencePath, signaturePath) => {
   );
 
   const pdfBytes = fs.readFileSync(evidencePath);
-  const signatureBytes = fs.readFileSync(signaturePath);
 
   const pdfDoc = await PDFDocument.load(pdfBytes);
 
-  let signatureImage;
+  // Convert the signature image to a real PNG
+  // before embedding it into the PDF.
+  const signatureBytes = await sharp(signaturePath)
+    .png()
+    .toBuffer();
 
-  const signatureExtension = path
-    .extname(signaturePath)
-    .toLowerCase();
-
-  if (
-    signatureExtension === ".jpg" ||
-    signatureExtension === ".jpeg"
-  ) {
-    signatureImage = await pdfDoc.embedJpg(signatureBytes);
-  } else {
-    signatureImage = await pdfDoc.embedPng(signatureBytes);
-  }
+  const signatureImage = await pdfDoc.embedPng(signatureBytes);
 
   const pages = pdfDoc.getPages();
 
@@ -75,6 +66,7 @@ const createSignedPdf = async (evidencePath, signaturePath) => {
   const { width } = lastPage.getSize();
 
   const signatureWidth = 120;
+
   const signatureHeight =
     (signatureImage.height / signatureImage.width) *
     signatureWidth;
@@ -89,11 +81,11 @@ const createSignedPdf = async (evidencePath, signaturePath) => {
   const signedPdfBytes = await pdfDoc.save({
     useObjectStreams: false,
   });
+
   fs.writeFileSync(outputPath, signedPdfBytes);
 
   return outputPath;
 };
-
 
 const createSignedCopy = async (
   evidencePath,
@@ -117,7 +109,6 @@ const createSignedCopy = async (
   // Video, text and other files don't get a visible signature.
   return null;
 };
-
 
 module.exports = {
   createSignedCopy,

@@ -1,50 +1,61 @@
-import { useState, useEffect, useCallback } from 'react';
-import { io } from 'socket.io-client';
-import { useAuth } from '../contexts/AuthContext';
+
+import { useState, useEffect, useCallback } from "react";
+import { io } from "socket.io-client";
+import { useAuth } from "../contexts/AuthContext";
 
 const API_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+  import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
-const SOCKET_URL = API_URL.replace(/\/api\/?$/, '');
+const SOCKET_URL = API_URL.replace(/\/api\/?$/, "");
 
 export function useNotifications() {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [latestToast, setLatestToast] = useState(null);
-  
-  // Destructure token from AuthContext. Fallback to localStorage for robustness.
+
   const { user, token: contextToken } = useAuth();
 
   useEffect(() => {
-    const token = contextToken || localStorage.getItem('anveshak_token');
-    
-    // If not authenticated, we don't connect.
+    const token =
+      contextToken || localStorage.getItem("anveshak_token");
+
     if (!token) return;
 
-    // 1. Fetch initial notifications from REST endpoint
-   fetch(`${API_URL}/notifications`, {
-      headers: { Authorization: `Bearer ${token}` }
+    // 1. Fetch initial notifications
+    fetch(`${API_URL}/notifications`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     })
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         if (Array.isArray(data)) {
           setNotifications(data);
-          setUnreadCount(data.filter(n => !n.isRead).length);
+          setUnreadCount(
+            data.filter((notification) => !notification.isRead).length
+          );
         }
       })
-      .catch(err => console.error("Failed to fetch notifications:", err));
+      .catch((err) =>
+        console.error("Failed to fetch notifications:", err)
+      );
 
-    // 2. Connect Socket.io for real-time updates
-    const socket = io(API_URL, {
-      auth: { token }
+    // 2. Connect Socket.IO to the backend root
+    const socket = io(SOCKET_URL, {
+      auth: { token },
+    });
+
+    socket.on("connect", () => {
+      console.log("Socket.IO connected:", socket.id);
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error("Socket.IO connection error:", error.message);
     });
 
     socket.on("newNotification", (notif) => {
-      // Prepend new notification to the list
-      setNotifications(prev => [notif, ...prev]);
-      setUnreadCount(prev => prev + 1);
-      
-      // Trigger the toast popup
+      setNotifications((prev) => [notif, ...prev]);
+      setUnreadCount((prev) => prev + 1);
       setLatestToast(notif);
     });
 
@@ -53,39 +64,59 @@ export function useNotifications() {
     };
   }, [user, contextToken]);
 
-  const markAsRead = useCallback(async (id) => {
-    let shouldCallApi = false;
-    
-    setNotifications(prev => {
-      const target = prev.find(n => n._id === id);
-      if (!target || target.isRead) return prev;
-      shouldCallApi = true;
-      return prev.map(n => n._id === id ? { ...n, isRead: true } : n);
-    });
+  const markAsRead = useCallback(
+    async (id) => {
+      let shouldCallApi = false;
 
-    if (!shouldCallApi) return;
-    
-    setUnreadCount(prev => Math.max(0, prev - 1));
+      setNotifications((prev) => {
+        const target = prev.find((notification) => notification._id === id);
 
-    const token = contextToken || localStorage.getItem('anveshak_token');
-    try {
-      // Send PATCH request to backend
-      await fetch(`${API_URL}/api/notifications/${id}/read`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${token}` }
+        if (!target || target.isRead) {
+          return prev;
+        }
+
+        shouldCallApi = true;
+
+        return prev.map((notification) =>
+          notification._id === id
+            ? { ...notification, isRead: true }
+            : notification
+        );
       });
-    } catch (err) {
-      console.error("Failed to mark notification as read:", err);
-    }
-  }, [contextToken]);
 
-  const clearToast = useCallback(() => setLatestToast(null), []);
+      if (!shouldCallApi) return;
 
-  return { 
-    notifications, 
-    unreadCount, 
-    markAsRead, 
-    latestToast, 
-    clearToast 
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+
+      const token =
+        contextToken || localStorage.getItem("anveshak_token");
+
+      try {
+        await fetch(`${API_URL}/notifications/${id}/read`, {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      } catch (err) {
+        console.error(
+          "Failed to mark notification as read:",
+          err
+        );
+      }
+    },
+    [contextToken]
+  );
+
+  const clearToast = useCallback(() => {
+    setLatestToast(null);
+  }, []);
+
+  return {
+    notifications,
+    unreadCount,
+    markAsRead,
+    latestToast,
+    clearToast,
   };
 }
