@@ -25,6 +25,7 @@ const LogFIR = () => {
   const [coordinates, setCoordinates] = useState(null);
   const [files, setFiles] = useState([]);
   const [trackingId, setTrackingId] = useState('');
+  const [isWomenSafety, setIsWomenSafety] = useState(false);
 
   // Speech Recognition State
   const [isListening, setIsListening] = useState(false);
@@ -136,6 +137,7 @@ const LogFIR = () => {
         incidentDate: incidentDate ? new Date(incidentDate + "T" + (incidentTime || "00:00")) : new Date(),
         incidentLocation: location || "Unknown Location",
         category: (incidentType || "OTHER").toUpperCase().replace(/ /g, "_"),
+        isWomenSafety,
       };
 
       const res = await fetch(`${API_URL}/fir`, {
@@ -223,6 +225,46 @@ const LogFIR = () => {
           {/* Step 0: Incident Type */}
           {currentStep === 0 && (
             <div className="animate-fade-in">
+              {/* Women FIR toggle - shown at the very start of filing */}
+              <div className="mb-6 rounded-xl border border-pink-200 bg-pink-50/70 p-4 sm:p-5">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-pink-100 text-pink-700 flex items-center justify-center shrink-0">
+                      <span className="text-lg font-bold" aria-hidden="true">♀</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-charcoal">Women FIR</h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Turn this on if you are a woman filing this FIR. It will be routed to the authorized Women FIR section in the officer portal.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={isWomenSafety}
+                    aria-label="Mark this FIR as a Women FIR"
+                    onClick={() => setIsWomenSafety((prev) => !prev)}
+                    className={`relative inline-flex h-7 w-14 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-pink-300 ${
+                      isWomenSafety ? 'bg-pink-600' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                        isWomenSafety ? 'translate-x-8' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {isWomenSafety && (
+                  <div className="mt-3 rounded-lg bg-white/80 border border-pink-100 px-3 py-2 text-sm font-medium text-pink-700">
+                    ✓ This FIR will appear in the officer portal under Women FIRs.
+                  </div>
+                )}
+              </div>
+
               <h2 className="text-2xl font-bold text-charcoal mb-6">What type of incident are you reporting?</h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {incidentTypes.map(type => (
@@ -250,6 +292,7 @@ const LogFIR = () => {
           {currentStep === 1 && (
             <div className="animate-fade-in">
               <h2 className="text-2xl font-bold text-charcoal mb-6">Incident Details</h2>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Date of Incident</label>

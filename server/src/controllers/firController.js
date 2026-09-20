@@ -12,6 +12,7 @@ const createFIR = async (req, res) => {
       incidentDate,
       incidentLocation,
       category,
+      isWomenSafety,
     } = req.body;
 
     // Generate FIR number automatically
@@ -49,6 +50,7 @@ const createFIR = async (req, res) => {
       incidentDate,
       incidentLocation,
       category,
+      isWomenSafety: Boolean(isWomenSafety),
       createdBy: req.user.userId,
     });
 
