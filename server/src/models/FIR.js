@@ -37,6 +37,12 @@ const firSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // Explicit citizen-selected routing flag for Women FIRs.
+    isWomenSafety: {
+      type: Boolean,
+      default: false,
+    },
+
     status: {
       type: String,
       enum: ["SUBMITTED", "UNDER_REVIEW", "REGISTERED", "CLOSED"],
