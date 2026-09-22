@@ -15,10 +15,13 @@ const DigitalSignature = require("../models/DigitalSignature");
 // ======================================================
 
 const signEvidence = async (req, res) => {
+  console.log("=================================");
   console.log("=== SIGN EVIDENCE REQUEST START ===");
-console.log("Evidence ID:", req.params.id);
-console.log("User:", req.user);
-console.log("File:", req.file ? req.file.path : "NO FILE");
+  console.log("Evidence ID:", req.params.evidenceId);
+  console.log("User:", req.user);
+  console.log("File:", req.file ? req.file.path : "NO FILE");
+  console.log("Mimetype:", req.file?.mimetype);
+  console.log("=================================");
   try {
     const { evidenceId } = req.params;
 
@@ -314,6 +317,7 @@ try {
     error: error?.message || "Unknown error",
   });
 }
+console.log("=== REACHED PRIVATE KEY SECTION ===");
 
     // --------------------------------------------------
     // 15. Load private key
@@ -437,7 +441,7 @@ console.log("=== END SIGNING KEY DEBUG ===");
     // --------------------------------------------------
     // 17. Create RSA digital signature
     // --------------------------------------------------
-
+console.log("=== REACHED RSA SIGNING SECTION ===");
     const signer =
       crypto.createSign("SHA256");
 
@@ -449,7 +453,8 @@ console.log("=== END SIGNING KEY DEBUG ===");
         privateKey,
         "base64"
       );
-
+console.log("=== RSA SIGNATURE CREATED ===");
+console.log("Digital signature length:", digitalSignature.length);
     // --------------------------------------------------
     // 18. Save signature record
     // --------------------------------------------------
