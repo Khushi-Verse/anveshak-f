@@ -281,6 +281,8 @@ const signEvidence = async (req, res) => {
 let privateKey;
 
 // Use Render environment variable in production
+console.log("PRIVATE_KEY exists:", !!process.env.PRIVATE_KEY);
+console.log("PRIVATE_KEY length:", process.env.PRIVATE_KEY?.length || 0);
 if (process.env.PRIVATE_KEY) {
   privateKey = process.env.PRIVATE_KEY.replace(/\\n/g, "\n");
 } else {
