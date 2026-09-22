@@ -277,12 +277,49 @@ const signEvidence = async (req, res) => {
     // --------------------------------------------------
 // 15. Load private key
 // --------------------------------------------------
-
 let privateKey;
 
-// Use Render environment variable in production
+console.log("=== SIGNING KEY DEBUG ===");
 console.log("PRIVATE_KEY exists:", !!process.env.PRIVATE_KEY);
 console.log("PRIVATE_KEY length:", process.env.PRIVATE_KEY?.length || 0);
+
+if (process.env.PRIVATE_KEY) {
+  console.log("Using PRIVATE_KEY from environment");
+
+  privateKey = process.env.PRIVATE_KEY.replace(/\\n/g, "\n");
+
+  console.log(
+    "Private key starts correctly:",
+    privateKey.startsWith("-----BEGIN")
+  );
+  console.log(
+    "Private key ends correctly:",
+    privateKey.includes("-----END")
+  );
+} else {
+  console.log("PRIVATE_KEY NOT FOUND, trying local key file");
+
+  const privateKeyPath = path.join(
+    __dirname,
+    "../../keys/private.pem"
+  );
+
+  console.log("Private key path:", privateKeyPath);
+  console.log(
+    "Private key file exists:",
+    fs.existsSync(privateKeyPath)
+  );
+
+  if (!fs.existsSync(privateKeyPath)) {
+    return res.status(500).json({
+      message: "Signing key not found",
+    });
+  }
+
+  privateKey = fs.readFileSync(privateKeyPath, "utf8");
+}
+
+console.log("=== END SIGNING KEY DEBUG ===");
 if (process.env.PRIVATE_KEY) {
   privateKey = process.env.PRIVATE_KEY.replace(/\\n/g, "\n");
 } else {
