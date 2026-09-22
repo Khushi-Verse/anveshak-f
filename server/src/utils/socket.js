@@ -9,10 +9,11 @@ module.exports = {
     io = socketIo(server, {
   cors: {
     origin: [
-      "http://localhost:5173",
-      "http://localhost:3000",
-      process.env.FRONTEND_URL,
-    ].filter(Boolean),
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://anveshak-h008dage2-khushi-singh-collabs-projects.vercel.app",
+  process.env.FRONTEND_URL,
+].filter(Boolean),
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
     credentials: true,
   },
