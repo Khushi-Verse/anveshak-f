@@ -260,15 +260,55 @@ const signEvidence = async (req, res) => {
     }
 
     // --------------------------------------------------
-    // 14. Create visually signed copy
-    // --------------------------------------------------
+// 14. Create visually signed copy
+// --------------------------------------------------
 
-    const signedFilePath =
-      await createSignedCopy(
-        evidenceFilePath,
-        req.file.path,
-        evidenceMimeType
-      );
+console.log("=== SIGNED COPY DEBUG ===");
+console.log("Evidence file:", evidenceFilePath);
+console.log("Evidence exists:", fs.existsSync(evidenceFilePath));
+console.log("Signature file:", req.file.path);
+console.log("Signature exists:", fs.existsSync(req.file.path));
+console.log("Evidence MIME:", evidenceMimeType);
+
+let signedFilePath;
+
+try {
+  signedFilePath = await createSignedCopy(
+    evidenceFilePath,
+    req.file.path,
+    evidenceMimeType
+  );
+
+  console.log(
+    "Signed copy created successfully:",
+    signedFilePath
+  );
+
+  console.log(
+    "Signed copy exists:",
+    signedFilePath
+      ? fs.existsSync(signedFilePath)
+      : false
+  );
+} catch (error) {
+  console.error("=== SIGNED COPY ERROR ===");
+  console.error("Error name:", error.name);
+  console.error("Error message:", error.message);
+  console.error("Error stack:", error.stack);
+  console.error("=========================");
+
+  if (
+    req.file?.path &&
+    fs.existsSync(req.file.path)
+  ) {
+    fs.unlinkSync(req.file.path);
+  }
+
+  return res.status(500).json({
+    message: "Failed to create signed evidence copy",
+    error: error.message,
+  });
+}
 
     // --------------------------------------------------
     // 15. Load private key
@@ -493,7 +533,7 @@ console.log("=== END SIGNING KEY DEBUG ===");
   }
 };
 
-// ======================================================
+// =====================================================
 // VERIFY DIGITAL SIGNATURE
 // ======================================================
 
