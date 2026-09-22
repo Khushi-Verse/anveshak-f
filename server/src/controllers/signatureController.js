@@ -469,26 +469,27 @@ console.log("=== END SIGNING KEY DEBUG ===");
     });
 
   } catch (error) {
-    if (
-      req.file &&
-      req.file.path &&
-      fs.existsSync(req.file.path)
-    ) {
-      fs.unlinkSync(req.file.path);
-    }
+    
+  if (
+    req.file &&
+    req.file.path &&
+    fs.existsSync(req.file.path)
+  ) {
+    fs.unlinkSync(req.file.path);
+  }
 
-    console.error(
-      "Digital signature error:",
-      error
-    );
+  console.error("=== SIGN EVIDENCE ERROR ===");
+  console.error("Error name:", error.name);
+  console.error("Error message:", error.message);
+  console.error("Error stack:", error.stack);
+  console.error("Full error:", error);
+  console.error("==========================");
 
-    return res.status(500).json({
-      message:
-        "Failed to sign evidence",
+  return res.status(500).json({
+    message: "Failed to sign evidence",
+    error: error.message,
+  });
 
-      error:
-        error.message,
-    });
   }
 };
 
