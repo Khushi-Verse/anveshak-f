@@ -1,5 +1,13 @@
+
 const dotenv = require("dotenv");
 dotenv.config();
+
+console.log("=== KEY DEBUG ===");
+console.log("PRIVATE_KEY exists:", !!process.env.PRIVATE_KEY);
+console.log("PRIVATE_KEY length:", process.env.PRIVATE_KEY?.length || 0);
+console.log("PUBLIC_KEY exists:", !!process.env.PUBLIC_KEY);
+console.log("PUBLIC_KEY length:", process.env.PUBLIC_KEY?.length || 0);
+console.log("=================");
 
 const express = require("express");
 const cors = require("cors");
