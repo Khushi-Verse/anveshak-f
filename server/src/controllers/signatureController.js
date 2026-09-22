@@ -15,6 +15,10 @@ const DigitalSignature = require("../models/DigitalSignature");
 // ======================================================
 
 const signEvidence = async (req, res) => {
+  console.log("=== SIGN EVIDENCE REQUEST START ===");
+console.log("Evidence ID:", req.params.id);
+console.log("User:", req.user);
+console.log("File:", req.file ? req.file.path : "NO FILE");
   try {
     const { evidenceId } = req.params;
 
@@ -292,9 +296,10 @@ try {
   );
 } catch (error) {
   console.error("=== SIGNED COPY ERROR ===");
-  console.error("Error name:", error.name);
-  console.error("Error message:", error.message);
-  console.error("Error stack:", error.stack);
+  console.error("Error name:", error?.name);
+  console.error("Error message:", error?.message);
+  console.error("Error stack:", error?.stack);
+  console.error("Full error:", error);
   console.error("=========================");
 
   if (
@@ -306,7 +311,7 @@ try {
 
   return res.status(500).json({
     message: "Failed to create signed evidence copy",
-    error: error.message,
+    error: error?.message || "Unknown error",
   });
 }
 
