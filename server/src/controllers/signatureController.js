@@ -280,58 +280,76 @@ const signEvidence = async (req, res) => {
 let privateKey;
 
 console.log("=== SIGNING KEY DEBUG ===");
-console.log("PRIVATE_KEY exists:", !!process.env.PRIVATE_KEY);
-console.log("PRIVATE_KEY length:", process.env.PRIVATE_KEY?.length || 0);
+console.log(
+  "PRIVATE_KEY exists:",
+  !!process.env.PRIVATE_KEY
+);
+console.log(
+  "PRIVATE_KEY length:",
+  process.env.PRIVATE_KEY?.length || 0
+);
 
 if (process.env.PRIVATE_KEY) {
   console.log("Using PRIVATE_KEY from environment");
 
   privateKey = process.env.PRIVATE_KEY.replace(/\\n/g, "\n");
 
+  console.log("=== PRIVATE KEY DEBUG ===");
   console.log(
-    "Private key starts correctly:",
+    "Starts correctly:",
     privateKey.startsWith("-----BEGIN")
   );
   console.log(
-    "Private key ends correctly:",
-    privateKey.includes("-----END")
+    "Ends correctly:",
+    privateKey.trim().endsWith("-----")
   );
+  console.log(
+    "Has RSA PRIVATE KEY header:",
+    privateKey.includes("-----BEGIN RSA PRIVATE KEY-----")
+  );
+  console.log(
+    "Has PRIVATE KEY header:",
+    privateKey.includes("-----BEGIN PRIVATE KEY-----")
+  );
+
+  try {
+    require("crypto").createPrivateKey(privateKey);
+    console.log(
+      "Private key parsed successfully: YES"
+    );
+  } catch (err) {
+    console.error(
+      "Private key parsed successfully: NO"
+    );
+    console.error(
+      "Private key parse error:",
+      err.message
+    );
+  }
+
 } else {
-  console.log("PRIVATE_KEY NOT FOUND, trying local key file");
+  console.log(
+    "PRIVATE_KEY NOT FOUND, trying local key file"
+  );
 
   const privateKeyPath = path.join(
     __dirname,
     "../../keys/private.pem"
   );
 
-  console.log("Private key path:", privateKeyPath);
+  console.log(
+    "Private key path:",
+    privateKeyPath
+  );
+
   console.log(
     "Private key file exists:",
     fs.existsSync(privateKeyPath)
   );
 
   if (!fs.existsSync(privateKeyPath)) {
-    return res.status(500).json({
-      message: "Signing key not found",
-    });
-  }
-
-  privateKey = fs.readFileSync(privateKeyPath, "utf8");
-}
-
-console.log("=== END SIGNING KEY DEBUG ===");
-if (process.env.PRIVATE_KEY) {
-  privateKey = process.env.PRIVATE_KEY.replace(/\\n/g, "\n");
-} else {
-  // Use local key file during development
-  const privateKeyPath = path.join(
-    __dirname,
-    "../../keys/private.pem"
-  );
-
-  if (!fs.existsSync(privateKeyPath)) {
     if (
-      req.file.path &&
+      req.file?.path &&
       fs.existsSync(req.file.path)
     ) {
       fs.unlinkSync(req.file.path);
@@ -346,8 +364,24 @@ if (process.env.PRIVATE_KEY) {
     privateKeyPath,
     "utf8"
   );
+
+  try {
+    require("crypto").createPrivateKey(privateKey);
+    console.log(
+      "Local private key parsed successfully: YES"
+    );
+  } catch (err) {
+    console.error(
+      "Local private key parsed successfully: NO"
+    );
+    console.error(
+      "Local private key parse error:",
+      err.message
+    );
+  }
 }
 
+console.log("=== END SIGNING KEY DEBUG ===");
     // --------------------------------------------------
     // 16. Prepare data
     // --------------------------------------------------
@@ -581,6 +615,13 @@ let publicKey;
 // Use Render environment variable in production
 if (process.env.PUBLIC_KEY) {
   publicKey = process.env.PUBLIC_KEY.replace(/\\n/g, "\n");
+  console.log("=== PUBLIC KEY DEBUG ===");
+  console.log("Starts correctly:", publicKey.startsWith("-----BEGIN"));
+  console.log("Ends correctly:", publicKey.trim().endsWith("-----"));
+  console.log(
+    "Has PUBLIC KEY header:",
+    publicKey.includes("-----BEGIN PUBLIC KEY-----")
+  );
 } else {
   // Use local key file during development
   const publicKeyPath = path.join(
