@@ -274,30 +274,40 @@ const signEvidence = async (req, res) => {
     // 15. Load private key
     // --------------------------------------------------
 
-    const privateKeyPath =
-      path.join(
-        __dirname,
-        "../../keys/private.pem"
-      );
+    // --------------------------------------------------
+// 15. Load private key
+// --------------------------------------------------
 
-    if (!fs.existsSync(privateKeyPath)) {
-      if (
-        req.file.path &&
-        fs.existsSync(req.file.path)
-      ) {
-        fs.unlinkSync(req.file.path);
-      }
+let privateKey;
 
-      return res.status(500).json({
-        message: "Signing key not found",
-      });
+// Use Render environment variable in production
+if (process.env.PRIVATE_KEY) {
+  privateKey = process.env.PRIVATE_KEY.replace(/\\n/g, "\n");
+} else {
+  // Use local key file during development
+  const privateKeyPath = path.join(
+    __dirname,
+    "../../keys/private.pem"
+  );
+
+  if (!fs.existsSync(privateKeyPath)) {
+    if (
+      req.file.path &&
+      fs.existsSync(req.file.path)
+    ) {
+      fs.unlinkSync(req.file.path);
     }
 
-    const privateKey =
-      fs.readFileSync(
-        privateKeyPath,
-        "utf8"
-      );
+    return res.status(500).json({
+      message: "Signing key not found",
+    });
+  }
+
+  privateKey = fs.readFileSync(
+    privateKeyPath,
+    "utf8"
+  );
+}
 
     // --------------------------------------------------
     // 16. Prepare data
@@ -523,28 +533,33 @@ const verifySignature = async (
     // 6. Load public key
     // --------------------------------------------------
 
-    const publicKeyPath =
-      path.join(
-        __dirname,
-        "../../keys/public.pem"
-      );
+    // --------------------------------------------------
+// 6. Load public key
+// --------------------------------------------------
 
-    if (
-      !fs.existsSync(
-        publicKeyPath
-      )
-    ) {
-      return res.status(500).json({
-        message:
-          "Public key not found",
-      });
-    }
+let publicKey;
 
-    const publicKey =
-      fs.readFileSync(
-        publicKeyPath,
-        "utf8"
-      );
+// Use Render environment variable in production
+if (process.env.PUBLIC_KEY) {
+  publicKey = process.env.PUBLIC_KEY.replace(/\\n/g, "\n");
+} else {
+  // Use local key file during development
+  const publicKeyPath = path.join(
+    __dirname,
+    "../../keys/public.pem"
+  );
+
+  if (!fs.existsSync(publicKeyPath)) {
+    return res.status(500).json({
+      message: "Public key not found",
+    });
+  }
+
+  publicKey = fs.readFileSync(
+    publicKeyPath,
+    "utf8"
+  );
+}
 
     // --------------------------------------------------
     // 7. Prepare verification data
