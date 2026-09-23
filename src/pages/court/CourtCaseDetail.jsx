@@ -289,12 +289,13 @@ export default function CourtCaseDetail() {
   }, [id]);
 
   /* Step 1: Trigger Signature Verification */
+  /* ─── Step 1: Trigger Signature Verification ─── */
   const triggerSignatureFlow = (type) => {
     setActionType(type);
     setIsSigModalOpen(true);
   };
 
-  /* Step 2: Signature Verified -> Open Upload Window */
+  /* ─── Step 2: Signature Verified → Open Upload Window ─── */
   const handleSignatureVerified = (sigData) => {
     setVerifiedSignature(sigData);
     setIsSigModalOpen(false);
@@ -309,60 +310,32 @@ export default function CourtCaseDetail() {
     }
   };
 
-  /* Form Submissions */
+  /* ─── Form Submissions ─── */
   const handleAddOrderSubmit = async (e) => {
     e.preventDefault();
-
     const token = localStorage.getItem('anveshak_token') || '';
     const caseId = caseData.caseId || id;
 
     const formData = new FormData();
-
-    formData.append(
-      'hearingDate',
-      hearingDate || new Date().toISOString().split('T')[0]
-    );
-
-    formData.append(
-      'note',
-      orderNote || 'Hearing concluded with judicial directions.'
-    );
-
-    if (nextHearingDate) {
-      formData.append('nextHearingDate', nextHearingDate);
-    }
-
-    if (verifiedSignature) {
-      formData.append(
-        'signatureData',
-        JSON.stringify(verifiedSignature)
-      );
-    }
-
-    if (orderFile) {
-      formData.append('file', orderFile);
-    }
+    formData.append('hearingDate', hearingDate || new Date().toISOString().split('T')[0]);
+    formData.append('note', orderNote || 'Hearing concluded with judicial directions.');
+    if (nextHearingDate) formData.append('nextHearingDate', nextHearingDate);
+    if (verifiedSignature) formData.append('signatureData', JSON.stringify(verifiedSignature));
+    if (orderFile) formData.append('file', orderFile);
 
     try {
-      const res = await fetch(
-        `${API_URL}/api/court/case/${caseId}/order`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          body: formData
-        }
-      );
+      const res = await fetch(`${API_URL}/api/court/case/${caseId}/order`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
 
-      if (!res.ok) {
-        throw new Error('Failed to save order');
-      }
-
-      await res.json();
-
-      alert('Document securely uploaded and cryptographically signed.');
-      window.location.reload();
+      if (!res.ok) throw new Error('Failed to save order');
+      const data = await res.json();
+        alert('Document securely uploaded and cryptographically signed.');
+        window.location.reload();
     } catch (err) {
       console.error(err);
       alert('Error uploading document to backend.');
@@ -921,6 +894,340 @@ export default function CourtCaseDetail() {
           </div>
         </div>
       </div>
+      {/* ══════════════════════════════════════════════════════════════ */}
+      <SignatureVerification 
+        isOpen={isSigModalOpen} 
+        onClose={() => setIsSigModalOpen(false)} 
+        onVerified={handleSignatureVerified} 
+        officerName={judgeName}
+        actionDescription={
+          actionType === 'order' ? 'Sign & Issue Court Order' : 
+          actionType === 'judgment' ? 'Sign & Upload Final Judgment' : 
+          'Sign & Upload Court Document'
+        }
+      />
+
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {/* ── STEP 2A: Upload Order & Record Hearing Window ──────────── */}
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {showOrderModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col border border-slate-100 animate-scale-in">
+
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-[#FAF8F5]">
+              <h2 className="text-lg font-bold text-[#0B3D91] flex items-center">
+                <Plus className="w-5 h-5 mr-2" /> Add Order / Next Hearing
+              </h2>
+              <button
+                onClick={() => setShowOrderModal(false)}
+                className="p-1.5 text-gray-400 hover:text-[#1A1A1A] hover:bg-gray-200 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[75vh]">
+              {/* Identity Verified Badge */}
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start mb-5">
+                <CheckCircle className="w-5 h-5 text-emerald-600 mr-2 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-semibold text-emerald-800">
+                    Identity Verified: {verifiedSignature?.officerName || judgeName}
+                  </p>
+                  <p className="text-[11px] text-emerald-700 mt-0.5">
+                    Your digital cryptographic signature and official court seal will be appended to this order.
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handleAddOrderSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-[#1A1A1A] mb-1">
+                      Hearing Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={hearingDate}
+                      onChange={e => setHearingDate(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-[#1A1A1A] mb-1">
+                      Next Hearing Date
+                    </label>
+                    <input
+                      type="date"
+                      value={nextHearingDate}
+                      onChange={e => setNextHearingDate(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-[#1A1A1A] mb-1">
+                    Judge's Order / Directions Note <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    required
+                    rows={4}
+                    value={orderNote}
+                    onChange={e => setOrderNote(e.target.value)}
+                    placeholder="Enter short order, summary of arguments heard, or judicial directions..."
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm resize-none"
+                  />
+                </div>
+
+                {/* File Upload from System */}
+                <div>
+                  <label className="block text-sm font-semibold text-[#1A1A1A] mb-1">
+                    Upload Order File (from your computer)
+                  </label>
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={e => setOrderFile(e.target.files[0])}
+                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 border border-slate-200 rounded-lg bg-slate-50/50 p-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                  {orderFile && (
+                    <div className="mt-2 p-2.5 bg-purple-50 border border-purple-200 rounded-lg flex items-center justify-between text-xs text-purple-800">
+                      <span className="font-semibold truncate">Selected: {orderFile.name}</span>
+                      <span className="text-slate-500 shrink-0">({(orderFile.size / 1024).toFixed(0)} KB)</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-3 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowOrderModal(false)}
+                    className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2.5 bg-[#0B3D91] text-white rounded-lg font-medium hover:bg-[#0B3D91]/90 transition-colors shadow-sm flex items-center justify-center gap-1.5"
+                  >
+                    <CheckCircle className="w-4 h-4" /> Sign & Issue Order
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {/* ── STEP 2B: Upload Final Judgment Window ──────────────────── */}
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {showJudgmentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col border border-slate-100 animate-scale-in">
+
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-[#FAF8F5]">
+              <h2 className="text-lg font-bold text-[#0B3D91] flex items-center">
+                <Scale className="w-5 h-5 mr-2" /> Upload Final Judgment
+              </h2>
+              <button
+                onClick={() => setShowJudgmentModal(false)}
+                className="p-1.5 text-gray-400 hover:text-[#1A1A1A] hover:bg-gray-200 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[75vh]">
+              {/* Identity Verified Badge */}
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start mb-4">
+                <CheckCircle className="w-5 h-5 text-emerald-600 mr-2 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-semibold text-emerald-800">
+                    Identity Verified: {verifiedSignature?.officerName || judgeName}
+                  </p>
+                  <p className="text-[11px] text-emerald-700 mt-0.5">
+                    Authorized Judicial Seal will be cryptographically anchored to this judgment.
+                  </p>
+                </div>
+              </div>
+
+              {/* Warning Notice */}
+              <div className="p-3 bg-red-50 border border-red-100 rounded-lg flex items-start mb-4">
+                <AlertCircle className="w-5 h-5 text-red-600 mr-2 shrink-0 mt-0.5" />
+                <p className="text-xs text-red-800 font-medium leading-relaxed">
+                  Notice: Final judgment permanently marks this case as <strong>"Disposed"</strong> and triggers SMS notifications to all registered litigants and the Investigating Officer.
+                </p>
+              </div>
+
+              <form onSubmit={handleUploadJudgmentSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-[#1A1A1A] mb-1">
+                    Judgment Remarks / Verdict Summary
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={judgmentRemarks}
+                    onChange={e => setJudgmentRemarks(e.target.value)}
+                    placeholder="Enter final verdict summary (e.g., Acquittal / Conviction details, sentencing)..."
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm resize-none"
+                  />
+                </div>
+
+                {/* System File Input */}
+                <div>
+                  <label className="block text-sm font-semibold text-[#1A1A1A] mb-1">
+                    Select Final Judgment PDF (from your computer) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    required
+                    onChange={e => setJudgmentFile(e.target.files[0])}
+                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 border border-slate-200 rounded-lg bg-slate-50/50 p-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                  {judgmentFile && (
+                    <div className="mt-2 p-2.5 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between text-xs text-green-800">
+                      <span className="font-semibold truncate">Selected: {judgmentFile.name}</span>
+                      <span className="text-slate-500 shrink-0">({(judgmentFile.size / 1024).toFixed(0)} KB)</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-3 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowJudgmentModal(false)}
+                    className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors shadow-sm flex items-center justify-center gap-1.5"
+                  >
+                    <Scale className="w-4 h-4" /> Sign & Dispose Case
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {/* ── STEP 2C: Upload General Case Document Window ──────────── */}
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {showDocumentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col border border-slate-100 animate-scale-in">
+
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-[#FAF8F5]">
+              <h2 className="text-lg font-bold text-[#0B3D91] flex items-center">
+                <Upload className="w-5 h-5 mr-2" /> Upload Case Document
+              </h2>
+              <button
+                onClick={() => setShowDocumentModal(false)}
+                className="p-1.5 text-gray-400 hover:text-[#1A1A1A] hover:bg-gray-200 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[75vh]">
+              {/* Identity Verified Badge */}
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start mb-4">
+                <CheckCircle className="w-5 h-5 text-emerald-600 mr-2 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-semibold text-emerald-800">
+                    Identity Verified: {verifiedSignature?.officerName || judgeName}
+                  </p>
+                  <p className="text-[11px] text-emerald-700 mt-0.5">
+                    Your digital seal will be securely attached to this court record.
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handleUploadDocumentSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-[#1A1A1A] mb-1">
+                    Document Category
+                  </label>
+                  <select
+                    value={docType}
+                    onChange={e => setDocType(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm bg-white"
+                  >
+                    <option value="Court Order">Court Order</option>
+                    <option value="Judicial Notice">Judicial Notice / Summons</option>
+                    <option value="Bail Order">Bail Order</option>
+                    <option value="Witness Summons">Witness Summons</option>
+                    <option value="Miscellaneous">Miscellaneous Filing</option>
+                  </select>
+                </div>
+
+                {/* System File Input */}
+                <div>
+                  <label className="block text-sm font-semibold text-[#1A1A1A] mb-1">
+                    Select File from System <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.jpg,.png"
+                    required
+                    onChange={e => setDocFile(e.target.files[0])}
+                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 border border-slate-200 rounded-lg bg-slate-50/50 p-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                  {docFile && (
+                    <div className="mt-2 p-2.5 bg-purple-50 border border-purple-200 rounded-lg flex items-center justify-between text-xs text-purple-800">
+                      <span className="font-semibold truncate">Selected: {docFile.name}</span>
+                      <span className="text-slate-500 shrink-0">({(docFile.size / 1024).toFixed(0)} KB)</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-3 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowDocumentModal(false)}
+                    className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2.5 bg-[#0B3D91] text-white rounded-lg font-medium hover:bg-[#0B3D91]/90 transition-colors shadow-sm flex items-center justify-center gap-1.5"
+                  >
+                    <Upload className="w-4 h-4" /> Sign & Upload
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {/* ── STEP 5: Audit Trail Modal ──────────── */}
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {showAuditModal && (
+        <AuditTrail 
+          logs={caseData.auditLog} 
+          onClose={() => setShowAuditModal(false)} 
+        />
+      )}
+
+            <HashVerificationModal 
+        isOpen={!!verifyingEvidence} 
+        onClose={() => setVerifyingEvidence(null)} 
+        evidence={verifyingEvidence}
+        caseId={caseData?.caseId || caseData?.id}
+      />
     </div>
   );
 }
