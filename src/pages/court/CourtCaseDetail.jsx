@@ -431,7 +431,7 @@ export default function CourtCaseDetail() {
               <div className="bg-gradient-to-br from-indigo-900 to-violet-900 rounded-2xl shadow-lg p-6 mb-6 text-white animate-fade-in-up">
                 <h2 className="text-xl font-serif font-bold mb-4 flex items-center">
                   <Activity className="w-5 h-5 mr-2 text-indigo-300" />
-                  Gemini AI Analysis
+                  AI Analysis
                 </h2>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
