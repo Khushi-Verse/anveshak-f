@@ -412,7 +412,7 @@ export default function CaseDetail() {
             {!caseData.aiAnalysis && (
               <button onClick={handleAnalyzeWithAI} className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm font-medium">
                 <Activity className="w-4 h-4 mr-2" />
-                Analyze with Gemini
+                Analyze
               </button>
             )}
             <button className="flex items-center px-4 py-2 bg-white/70 backdrop-blur-sm border border-violet-200 text-violet-700 rounded-lg hover:bg-violet-50 transition-colors shadow-sm">
@@ -537,7 +537,7 @@ export default function CaseDetail() {
             {caseData.aiAnalysis && (
             <div className="bg-gradient-to-br from-indigo-900 to-violet-900 rounded-2xl shadow-lg p-6 mb-6 text-white animate-fade-in-up">
               <h2 className="text-xl font-serif font-bold mb-4 flex items-center">
-                <Activity className="w-5 h-5 mr-2 text-indigo-300" /> Gemini AI Analysis
+                <Activity className="w-5 h-5 mr-2 text-indigo-300" /> AI Analysis
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 <div className="bg-white/10 rounded-lg p-3">
